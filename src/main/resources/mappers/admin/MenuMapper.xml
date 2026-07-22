@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bunshik.admin.mappers.MenuMapper">
+
+    <select id="findAll"
+            resultType="com.bunshik.common.entity.Menu">
+
+        SELECT
+        menu_id,
+        menu_name,
+        price,
+        category,
+        image_url,
+        description,
+        is_available,
+        sold_out_reason,
+        created_at,
+        updated_at
+        FROM menus
+        ORDER BY menu_id DESC
+
+    </select>
+
+</mapper>
