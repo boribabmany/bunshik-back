@@ -7,7 +7,6 @@ import lombok.Setter;
 @Setter
 public class OrderItemOption {
 
-    private Long orderItemOptionId;
     private Long orderItemId;
     private Long optionId;
 }

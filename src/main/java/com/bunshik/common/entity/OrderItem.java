@@ -11,5 +11,5 @@ public class OrderItem {
     private Long orderId;
     private Long menuId;
     private Integer quantity;
-    private Integer price;
+    private Integer priceAtOrder;
 }

@@ -9,10 +9,11 @@ import java.time.LocalDateTime;
 @Setter
 public class Payment {
 
-    private Integer paymentId;
-    private Integer orderId;
+    private Long paymentId;
+    private Long orderId;
     private Integer amount;
-    private String paymentMethod;
-    private String paymentStatus;
-    private LocalDateTime paidAt;
+    private String paymentMethod;  // "카드" | "현금" | "간편결제"
+    private String paymentStatus;  // "성공" | "카드오류" | "거절" | "시스템오류" | "취소"
+    private String failReason;
+    private LocalDateTime attemptedAt;
 }

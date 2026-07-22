@@ -11,8 +11,8 @@ public class Order {
 
     private Integer orderId;
     private String orderNumber;
-    private String orderType;
+    private String orderType;  // "매장" | "포장"
     private Integer totalPrice;
-    private String orderStatus;
+    private String orderStatus;  // "접수" | "조리중" | "완료" | "취소"
     private LocalDateTime createdAt;
 }

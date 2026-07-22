@@ -7,7 +7,6 @@ import lombok.Setter;
 @Setter
 public class MenuOption {
 
-    private Long menuOptionId;
     private Long menuId;
     private Long optionId;
 }
