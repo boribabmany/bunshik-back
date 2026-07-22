@@ -1,4 +1,4 @@
-package com.bunshik.bunshikback.entity;
+package com.bunshik.common.entity;
 
 import lombok.Getter;
 import lombok.Setter;

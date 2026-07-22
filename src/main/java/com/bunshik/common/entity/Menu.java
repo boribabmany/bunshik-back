@@ -1,4 +1,4 @@
-package com.bunshik.bunshikback.entity;
+package com.bunshik.common.entity;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class Menus {
+public class Menu {
 
     private Long menuId;
     private String menuName;

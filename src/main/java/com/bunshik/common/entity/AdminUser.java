@@ -1,4 +1,4 @@
-package com.bunshik.bunshikback.entity;
+package com.bunshik.common.entity;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -7,11 +7,11 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class AdminHistory {
+public class AdminUser {
 
     private Integer id;
-    private Integer adminId;
-    private String title;
-    private String description;
+    private String username;
+    private String passwordHash;
+    private Boolean isActive;
     private LocalDateTime createdAt;
 }

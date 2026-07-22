@@ -1,11 +1,11 @@
-package com.bunshik.bunshikback.entity;
+package com.bunshik.common.entity;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class Options {
+public class Option {
 
     private Long optionId;
     private String optionName;

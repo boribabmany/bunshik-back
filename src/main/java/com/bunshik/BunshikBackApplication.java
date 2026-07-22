@@ -1,4 +1,4 @@
-package com.bunshik.bunshikback;
+package com.bunshik;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
