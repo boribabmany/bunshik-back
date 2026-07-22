@@ -1,4 +1,4 @@
-package com.bunshik.user.dto;
+package com.bunshik.kiosk.dto;
 
 public class PaymentResponseDto {
 }
