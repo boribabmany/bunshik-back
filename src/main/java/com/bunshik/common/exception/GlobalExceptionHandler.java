@@ -1,4 +1,4 @@
-package com.bunshik.common;
+package com.bunshik.common.exception;
 
 public class GlobalExceptionHandler {
 }
