@@ -1,5 +1,6 @@
 package com.bunshik.admin.controller;
 
+import com.bunshik.admin.dto.AdminMenuRequestDto;
 import com.bunshik.admin.service.AdminMenuService;
 import com.bunshik.common.entity.Menu;
 import lombok.RequiredArgsConstructor;
@@ -28,17 +29,16 @@ public class AdminMenuController {
 
     // 메뉴 등록
     @PostMapping
-    public int insert(@RequestBody Menu menu) {
-        return adminMenuService.insert(menu);
+    public int insert(@RequestBody AdminMenuRequestDto dto) {
+        return adminMenuService.insert(dto);
     }
 
     // 메뉴 수정
     @PutMapping("/{menuId}")
     public int update(@PathVariable Long menuId,
-                      @RequestBody Menu menu) {
+                      @RequestBody AdminMenuRequestDto dto) {
 
-        menu.setMenuId(menuId);
-        return adminMenuService.update(menu);
+        return adminMenuService.update(menuId, dto);
     }
 
     // 메뉴 삭제
