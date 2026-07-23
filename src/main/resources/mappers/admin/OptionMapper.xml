@@ -1,4 +1,84 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.bunshik.admin.mappers.HistoryMapper">
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bunshik.admin.mappers.AdminOptionMapper">
+
+    <!-- 전체 조회 -->
+    <select id="findAll"
+            resultType="com.bunshik.common.entity.Option">
+
+        SELECT
+        option_id,
+        option_name,
+        option_price,
+        option_image,
+        option_is_available
+        FROM options
+        ORDER BY option_id DESC
+
+    </select>
+
+    <!-- 상세 조회 -->
+    <select id="findById"
+            parameterType="long"
+            resultType="com.bunshik.common.entity.Option">
+
+        SELECT
+        option_id,
+        option_name,
+        option_price,
+        option_image,
+        option_is_available
+        FROM options
+        WHERE option_id = #{optionId}
+
+    </select>
+
+    <!-- 등록 -->
+    <insert id="insert"
+            parameterType="com.bunshik.common.entity.Option">
+
+        INSERT INTO options
+        (
+        option_name,
+        option_price,
+        option_image,
+        option_is_available
+        )
+        VALUES
+        (
+        #{optionName},
+        #{optionPrice},
+        #{optionImage},
+        #{optionIsAvailable}
+        )
+
+    </insert>
+
+    <!-- 수정 -->
+    <update id="update"
+            parameterType="com.bunshik.common.entity.Option">
+
+        UPDATE options
+        SET
+        option_name = #{optionName},
+        option_price = #{optionPrice},
+        option_image = #{optionImage},
+        option_is_available = #{optionIsAvailable}
+        WHERE option_id = #{optionId}
+
+    </update>
+
+    <!-- 삭제 -->
+    <delete id="delete"
+            parameterType="long">
+
+        DELETE
+        FROM options
+        WHERE option_id = #{optionId}
+
+    </delete>
+
 </mapper>

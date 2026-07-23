@@ -1,4 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.bunshik.admin.mappers.HistoryMapper">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bunshik.admin.mappers.AdminHistoryMapper">
+
+    <select id="getHistoryList"
+            resultType="com.bunshik.admin.dto.AdminHistoryResponse">
+
+        SELECT
+        id,
+        admin_id,
+        title,
+        description,
+        created_at
+        FROM admin_history
+        ORDER BY created_at DESC
+
+    </select>
+
 </mapper>
