@@ -1,4 +1,126 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
 <mapper namespace="com.bunshik.kiosk.mapper.OrderMapper">
+
+    <!-- 주문 저장 -->
+    <insert id="insertOrder">
+
+        INSERT INTO orders
+        (
+        order_number,
+        order_type,
+        total_price
+        )
+        VALUES
+        (
+        '0',
+        #{orderType},
+        #{totalPrice}
+        )
+
+    </insert>
+
+    <!-- 마지막 주문번호 -->
+    <select id="getLastOrderId" resultType="int">
+
+        SELECT LAST_INSERT_ID()
+
+    </select>
+
+    <!-- 주문번호 수정 -->
+    <update id="updateOrderNumber">
+
+        UPDATE orders
+        SET order_number = #{orderNumber}
+        WHERE order_id = #{orderId}
+
+    </update>
+
+    <!-- 주문상품 저장 -->
+    <insert id="insertOrderItem">
+
+        INSERT INTO order_items
+        (
+        order_id,
+        menu_id,
+        quantity,
+        price_at_order
+        )
+        VALUES
+        (
+        #{orderId},
+        #{menuId},
+        #{quantity},
+        #{price}
+        )
+
+    </insert>
+
+    <!-- 마지막 주문상품 -->
+    <select id="getLastOrderItemId" resultType="int">
+
+        SELECT LAST_INSERT_ID()
+
+    </select>
+
+    <!-- 주문상품 옵션 -->
+    <insert id="insertOrderItemOption">
+
+        INSERT INTO order_item_options
+        (
+        order_item_id,
+        option_id
+        )
+        VALUES
+        (
+        #{orderItemId},
+        #{optionId}
+        )
+
+    </insert>
+
+    <!-- 결제 저장 -->
+    <insert id="insertPayment">
+
+        INSERT INTO payments
+        (
+        order_id,
+        amount,
+        payment_method,
+        payment_status,
+        fail_reason
+        )
+        VALUES
+        (
+        #{orderId},
+        #{amount},
+        #{paymentMethod},
+        #{paymentStatus},
+        #{failReason}
+        )
+
+    </insert>
+
+    <!-- 메뉴 가격 -->
+    <select id="getMenuPrice" resultType="int">
+
+        SELECT price
+        FROM menus
+        WHERE menu_id = #{menuId}
+
+    </select>
+
+    <!-- 옵션 가격 -->
+    <select id="getOptionPrice" resultType="int">
+
+        SELECT option_price
+        FROM options
+        WHERE option_id = #{optionId}
+
+    </select>
+
 </mapper>
