@@ -24,5 +24,5 @@ public class MenuResponseDto {
     @JsonProperty("is_available")
     private Boolean isAvailable;
 
-
+    private List<OptionResponseDto> options;
 }
