@@ -1,6 +1,6 @@
 package com.bunshik.admin.controller;
 
-import com.bunshik.admin.dto.AdminHistoryResponse;
+import com.bunshik.admin.dto.AdminHistoryResponseDto;
 import com.bunshik.admin.service.AdminHistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +15,7 @@ public class AdminHistoryController {
     private final AdminHistoryService adminHistoryService;
 
     @GetMapping
-    public List<AdminHistoryResponse> getHistoryList() {
+    public List<AdminHistoryResponseDto> getHistoryList() {
         return adminHistoryService.getHistoryList();
     }
 }

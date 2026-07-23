@@ -5,7 +5,7 @@
 <mapper namespace="com.bunshik.admin.mappers.AdminHistoryMapper">
 
     <select id="getHistoryList"
-            resultType="com.bunshik.admin.dto.AdminHistoryResponse">
+            resultType="com.bunshik.admin.dto.AdminHistoryResponseDto">
 
         SELECT
         id,

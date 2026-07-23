@@ -14,5 +14,4 @@ public class AdminMenuRequestDto {
     private String description;
     private Boolean isAvailable;
     private String soldOutReason;
-
 }

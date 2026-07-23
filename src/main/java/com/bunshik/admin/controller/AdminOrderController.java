@@ -1,5 +1,7 @@
 package com.bunshik.admin.controller;
 
+import com.bunshik.admin.dto.AdminOrderSearchRequestDto;
+import com.bunshik.admin.dto.AdminOrderStatusRequestDto;
 import com.bunshik.admin.service.AdminOrderService;
 import com.bunshik.common.entity.Order;
 import lombok.RequiredArgsConstructor;
@@ -26,24 +28,27 @@ public class AdminOrderController {
         return adminOrderService.findById(orderId);
     }
 
-    // 주문 등록
-    @PostMapping
-    public int insert(@RequestBody Order order) {
-        return adminOrderService.insert(order);
+    // 주문 검색
+    @GetMapping("/search")
+    public List<Order> search(AdminOrderSearchRequestDto dto) {
+        return adminOrderService.search(dto);
     }
 
-    // 주문 수정
-    @PutMapping("/{orderId}")
-    public int update(@PathVariable Integer orderId,
-                      @RequestBody Order order) {
+    // 주문 상태 변경
+    @PatchMapping("/{orderId}/status")
+    public int updateStatus(@PathVariable Integer orderId,
+                            @RequestBody AdminOrderStatusRequestDto dto) {
 
+        Order order = new Order();
         order.setOrderId(orderId);
-        return adminOrderService.update(order);
+        order.setOrderStatus(dto.getOrderStatus());
+
+        return adminOrderService.updateStatus(order);
     }
 
-    // 주문 삭제
-    @DeleteMapping("/{orderId}")
-    public int delete(@PathVariable Integer orderId) {
-        return adminOrderService.delete(orderId);
+    // 주문 취소
+    @PatchMapping("/{orderId}/cancel")
+    public int cancel(@PathVariable Integer orderId) {
+        return adminOrderService.cancel(orderId);
     }
 }

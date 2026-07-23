@@ -5,7 +5,7 @@
 
 <mapper namespace="com.bunshik.admin.mappers.AdminOrderMapper">
 
-    <!-- 전체 조회 -->
+    <!-- 주문 전체 조회 -->
     <select id="findAll"
             resultType="com.bunshik.common.entity.Order">
 
@@ -21,7 +21,7 @@
 
     </select>
 
-    <!-- 상세 조회 -->
+    <!-- 주문 상세 조회 -->
     <select id="findById"
             parameterType="int"
             resultType="com.bunshik.common.entity.Order">
@@ -38,49 +38,58 @@
 
     </select>
 
-    <!-- 등록 -->
-    <insert id="insert"
-            parameterType="com.bunshik.common.entity.Order">
+    <!-- 주문 검색 -->
+    <select id="search"
+            parameterType="com.bunshik.admin.dto.AdminOrderSearchRequestDto"
+            resultType="com.bunshik.common.entity.Order">
 
-        INSERT INTO orders
-        (
+        SELECT
+        order_id,
         order_number,
         order_type,
         total_price,
-        order_status
-        )
-        VALUES
-        (
-        #{orderNumber},
-        #{orderType},
-        #{totalPrice},
-        #{orderStatus}
-        )
+        order_status,
+        created_at
+        FROM orders
 
-    </insert>
+        <where>
 
-    <!-- 수정 -->
-    <update id="update"
+            <if test="date != null and date != ''">
+                DATE(created_at) = #{date}
+            </if>
+
+            <if test="orderType != null and orderType != '' and orderType != '전체'">
+                AND order_type = #{orderType}
+            </if>
+
+            <if test="orderStatus != null and orderStatus != '' and orderStatus != '전체'">
+                AND order_status = #{orderStatus}
+            </if>
+
+        </where>
+
+        ORDER BY order_id DESC
+
+    </select>
+
+    <!-- 주문 상태 변경 -->
+    <update id="updateStatus"
             parameterType="com.bunshik.common.entity.Order">
 
         UPDATE orders
-        SET
-        order_number = #{orderNumber},
-        order_type = #{orderType},
-        total_price = #{totalPrice},
-        order_status = #{orderStatus}
+        SET order_status = #{orderStatus}
         WHERE order_id = #{orderId}
 
     </update>
 
-    <!-- 삭제 -->
-    <delete id="delete"
+    <!-- 주문 취소 -->
+    <update id="cancel"
             parameterType="int">
 
-        DELETE
-        FROM orders
+        UPDATE orders
+        SET order_status = '취소'
         WHERE order_id = #{orderId}
 
-    </delete>
+    </update>
 
 </mapper>

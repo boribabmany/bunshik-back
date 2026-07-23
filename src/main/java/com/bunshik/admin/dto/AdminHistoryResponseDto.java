@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class AdminHistoryResponse {
+public class AdminHistoryResponseDto {
 
     private Integer id;
     private Integer adminId;

@@ -15,5 +15,4 @@ public class AdminOrderResponseDto {
     private Integer totalPrice;
     private String orderStatus;
     private LocalDateTime createdAt;
-
 }
