@@ -1,4 +1,4 @@
 package com.bunshik.admin.mappers;
 
-public class SalesMapper {
+public interface AdminSalesMapper {
 }

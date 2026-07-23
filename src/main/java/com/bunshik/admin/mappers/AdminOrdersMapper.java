@@ -1,4 +1,4 @@
 package com.bunshik.admin.mappers;
 
-public class OrdersMapper {
+public interface AdminOrdersMapper {
 }
