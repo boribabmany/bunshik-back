@@ -17,5 +17,22 @@
         ORDER BY created_at DESC
 
     </select>
+    <insert id="insertHistory">
+        INSERT INTO admin_history
+        (
+        admin_id,
+        title,
+        description,
+        created_at
+        )
+        VALUES
+        (
+        #{adminId},
+        #{title},
+        #{description},
+        NOW()
+        )
+    </insert>
+
 
 </mapper>

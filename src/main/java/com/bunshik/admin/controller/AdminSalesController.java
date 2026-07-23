@@ -35,8 +35,6 @@ public class AdminSalesController {
                 adminSalesService.getPopularMenus()
         );
     }
-
-
     // 최근 매출 내역 (그래프/테이블)
     @GetMapping("/history")
     public ApiResponse<List<SalesHistoryResponse>> getSalesHistory() {
