@@ -5,6 +5,7 @@
     <resultMap id="menuResultMap" type="com.bunshik.kiosk.dto.MenuResponseDto">
         <id property="menuId" column="menu_id"/>
         <result property="menuName" column="menu_name"/>
+        <result property="menuNameEn" column="menu_name_en"/>
         <result property="price" column="price"/>
         <result property="category" column="category"/>
         <result property="imageUrl" column="image_url"/>
@@ -13,6 +14,7 @@
         <collection property="options" ofType="com.bunshik.kiosk.dto.OptionResponseDto" javaType="java.util.List">
             <id property="optionId" column="option_id"/>
             <result property="optionName" column="option_name"/>
+            <result property="optionNameEn" column="option_name_en"/>
             <result property="optionPrice" column="option_price"/>
             <result property="optionImage" column="option_image"/>
         </collection>
@@ -20,8 +22,9 @@
 
     <select id="findAll" resultMap="menuResultMap">
         SELECT
-        m.menu_id, m.menu_name, m.price, m.category, m.image_url, m.is_available,
-        o.option_id, o.option_name, o.option_price, o.option_image
+        m.menu_id, m.menu_name, m.menu_name_en, m.price, m.category, m.image_url, m.is_available,
+        m.description, m.description_en,
+        o.option_id, o.option_name, o.option_name_en, o.option_price, o.option_image
         FROM menus m
         LEFT JOIN menu_options mo ON m.menu_id = mo.menu_id
         LEFT JOIN options o ON mo.option_id = o.option_id

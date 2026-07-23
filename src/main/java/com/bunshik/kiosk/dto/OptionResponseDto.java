@@ -14,6 +14,9 @@ public class OptionResponseDto {
     @JsonProperty("option_name")
     private String optionName;
 
+    @JsonProperty("option_name_en")
+    private String optionNameEn;
+
     @JsonProperty("option_price")
     private Integer optionPrice;
 

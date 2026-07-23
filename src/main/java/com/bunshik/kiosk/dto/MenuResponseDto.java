@@ -15,6 +15,12 @@ public class MenuResponseDto {
     @JsonProperty("menu_name")
     private String menuName;
 
+    @JsonProperty("menu_name_en")
+    private String menuNameEn;
+
+    @JsonProperty("description_en")
+    private String descriptionEn;
+
     private Integer price;
     private String category;
 

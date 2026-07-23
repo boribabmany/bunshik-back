@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bunshik.kiosk.mapper.OptionMapper">
-    <select id="findAll" resultType="Option">
-        SELECT * FROM options
+    <select id="findAll" resultType="com.bunshik.kiosk.dto.OptionResponseDto">
+        SELECT option_id, option_name, option_name_en, option_price, option_image
+        FROM options
+        WHERE option_is_available = TRUE
     </select>
 </mapper>
