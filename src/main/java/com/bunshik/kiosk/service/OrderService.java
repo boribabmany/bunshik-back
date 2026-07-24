@@ -8,6 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -17,56 +20,49 @@ public class OrderService {
 
     public OrderResponseDto createOrder(OrderCreateRequestDto request) {
 
-        int totalPrice = calculateTotalPrice(request);
+        if (request.getItems() == null || request.getItems().isEmpty()) {
+            throw new IllegalArgumentException("주문 항목이 비어있습니다.");
+        }
 
-        // 주문 저장 (order_number는 임시값 0)
-        orderMapper.insertOrder(
-                request.getOrderType(),
-                totalPrice
-        );
+        Map<Integer, Integer> menuPriceCache = new HashMap<>();
+        Map<Integer, Integer> optionPriceCache = new HashMap<>();
 
-        // 생성된 PK 조회
+        int totalPrice = calculateTotalPrice(request, menuPriceCache, optionPriceCache);
+
+        orderMapper.insertOrder(request.getOrderType(), totalPrice);
+
         Integer orderId = orderMapper.getLastOrderId();
 
-        // order_number를 order_id와 동일하게 수정
-        orderMapper.updateOrderNumber(
-                orderId,
-                String.valueOf(orderId)
-        );
+        orderMapper.updateOrderNumber(orderId, String.valueOf(orderId));
 
-        // 주문 상세 저장
-        saveOrderItems(orderId, request);
-
-        // 결제 저장
-        orderMapper.insertPayment(
-                orderId,
-                totalPrice,
-                request.getPaymentMethod(),
-                "성공",
-                null
-        );
+        saveOrderItems(orderId, request, menuPriceCache, optionPriceCache);
 
         return OrderResponseDto.builder()
-                .status("success")
+                .status("대기")
+                .orderId(orderId)
                 .orderNumber(String.valueOf(orderId))
-                .message("주문이 완료되었습니다.")
+                .message("주문이 생성되었습니다. 결제를 진행해주세요.")
                 .build();
     }
 
-    // 총 금액 계산
-    private int calculateTotalPrice(OrderCreateRequestDto request) {
+    private int calculateTotalPrice(OrderCreateRequestDto request,
+                                    Map<Integer, Integer> menuPriceCache,
+                                    Map<Integer, Integer> optionPriceCache) {
 
         int totalPrice = 0;
 
         for (OrderItemDto item : request.getItems()) {
 
-            int menuPrice = orderMapper.getMenuPrice(item.getMenuId());
+            if (item.getQuantity() == null || item.getQuantity() <= 0) {
+                throw new IllegalArgumentException("수량은 1개 이상이어야 합니다.");
+            }
 
+            int menuPrice = getMenuPriceCached(item.getMenuId(), menuPriceCache);
             int optionPrice = 0;
 
             if (item.getOptionIds() != null) {
                 for (Integer optionId : item.getOptionIds()) {
-                    optionPrice += orderMapper.getOptionPrice(optionId);
+                    optionPrice += getOptionPriceCached(optionId, optionPriceCache);
                 }
             }
 
@@ -76,38 +72,50 @@ public class OrderService {
         return totalPrice;
     }
 
-    // 주문상품 저장
-    private void saveOrderItems(Integer orderId, OrderCreateRequestDto request) {
+    private void saveOrderItems(Integer orderId, OrderCreateRequestDto request,
+                                Map<Integer, Integer> menuPriceCache,
+                                Map<Integer, Integer> optionPriceCache) {
 
         for (OrderItemDto item : request.getItems()) {
 
-            int menuPrice = orderMapper.getMenuPrice(item.getMenuId());
-
+            int menuPrice = getMenuPriceCached(item.getMenuId(), menuPriceCache);
             int optionPrice = 0;
 
             if (item.getOptionIds() != null) {
                 for (Integer optionId : item.getOptionIds()) {
-                    optionPrice += orderMapper.getOptionPrice(optionId);
+                    optionPrice += getOptionPriceCached(optionId, optionPriceCache);
                 }
             }
 
-            orderMapper.insertOrderItem(
-                    orderId,
-                    item.getMenuId(),
-                    item.getQuantity(),
-                    menuPrice + optionPrice
-            );
+            orderMapper.insertOrderItem(orderId, item.getMenuId(), item.getQuantity(), menuPrice + optionPrice);
 
             Integer orderItemId = orderMapper.getLastOrderItemId();
 
             if (item.getOptionIds() != null) {
                 for (Integer optionId : item.getOptionIds()) {
-                    orderMapper.insertOrderItemOption(
-                            orderItemId,
-                            optionId
-                    );
+                    orderMapper.insertOrderItemOption(orderItemId, optionId);
                 }
             }
         }
+    }
+
+    private int getMenuPriceCached(Integer menuId, Map<Integer, Integer> cache) {
+        return cache.computeIfAbsent(menuId, id -> {
+            Integer price = orderMapper.getMenuPrice(id);
+            if (price == null) {
+                throw new IllegalArgumentException("존재하지 않는 메뉴입니다: " + id);
+            }
+            return price;
+        });
+    }
+
+    private int getOptionPriceCached(Integer optionId, Map<Integer, Integer> cache) {
+        return cache.computeIfAbsent(optionId, id -> {
+            Integer price = orderMapper.getOptionPrice(id);
+            if (price == null) {
+                throw new IllegalArgumentException("존재하지 않는 옵션입니다: " + id);
+            }
+            return price;
+        });
     }
 }

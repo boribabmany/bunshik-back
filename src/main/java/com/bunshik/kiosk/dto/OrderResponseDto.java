@@ -10,6 +10,9 @@ public class OrderResponseDto {
 
     private String status;
 
+    @JsonProperty("order_id")
+    private Integer orderId;
+
     @JsonProperty("order_number")
     private String orderNumber;
 

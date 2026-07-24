@@ -6,6 +6,7 @@
         <id property="menuId" column="menu_id"/>
         <result property="menuName" column="menu_name"/>
         <result property="menuNameEn" column="menu_name_en"/>
+        <result property="descriptionEn" column="description_en"/>  <!-- 추가: 누락돼있던 매핑 -->
         <result property="price" column="price"/>
         <result property="category" column="category"/>
         <result property="imageUrl" column="image_url"/>
@@ -28,6 +29,7 @@
         FROM menus m
         LEFT JOIN menu_options mo ON m.menu_id = mo.menu_id
         LEFT JOIN options o ON mo.option_id = o.option_id
+        AND o.option_is_available = TRUE  <!-- 추가: 품절 옵션 노출 방지 -->
     </select>
 
 </mapper>
