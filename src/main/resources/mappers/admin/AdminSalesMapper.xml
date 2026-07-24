@@ -3,17 +3,26 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.bunshik.admin.mapper.AdminSalesMapper">
+
+<mapper namespace="com.bunshik.admin.mappers.AdminSalesMapper">
+
     <!-- =========================
          매출 요약 카드
          ========================= -->
     <select id="getSalesSummary"
             resultType="com.bunshik.admin.dto.AdminSalesSummaryResponse">
+
         SELECT
-        -- 오늘 매출
-        IFNULL(SUM( CASE WHEN DATE(o.created_at) = CURDATE() THEN o.total_price ELSE 0 END
-        ), 0) AS todaySales,
-        -- 오늘 주문 수
+
+        IFNULL(SUM(
+        CASE
+        WHEN DATE(o.created_at) = CURDATE()
+        THEN o.total_price
+        ELSE 0
+        END
+        ),0) AS todaySales,
+
+
         COUNT(
         CASE
         WHEN DATE(o.created_at) = CURDATE()
@@ -22,38 +31,34 @@
         ) AS todayOrders,
 
 
-        -- 이번 달 매출
         IFNULL(SUM(
         CASE
-        WHEN DATE_FORMAT(o.created_at, '%Y-%m')
+        WHEN DATE_FORMAT(o.created_at,'%Y-%m')
         =
-        DATE_FORMAT(CURDATE(), '%Y-%m')
+        DATE_FORMAT(CURDATE(),'%Y-%m')
         THEN o.total_price
         ELSE 0
         END
-        ), 0) AS monthlySales,
+        ),0) AS monthlySales,
 
 
-        -- 어제 매출
         IFNULL(SUM(
         CASE
         WHEN DATE(o.created_at)
         =
-        DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+        DATE_SUB(CURDATE(),INTERVAL 1 DAY)
         THEN o.total_price
         ELSE 0
         END
-        ), 0) AS yesterdaySales,
+        ),0) AS yesterdaySales,
 
 
-        -- 평균 주문 금액
         IFNULL(AVG(o.total_price),0) AS averageOrderPrice,
 
 
-        -- 완료 주문 수
         COUNT(
         CASE
-        WHEN o.order_status = 'COMPLETED'
+        WHEN o.order_status IN ('완료','COMPLETED')
         THEN o.order_id
         END
         ) AS completedOrders
@@ -61,12 +66,19 @@
 
         FROM orders o
 
+        WHERE o.order_status NOT IN ('취소','CANCELLED')
+
+
     </select>
+
+
+
     <!-- =========================
          인기 메뉴 TOP 5
          ========================= -->
     <select id="getPopularMenus"
             resultType="com.bunshik.admin.dto.PopularMenuResponse">
+
         SELECT
 
         m.menu_name AS menuName,
@@ -77,8 +89,15 @@
         FROM order_items oi
 
 
+        JOIN orders o
+        ON oi.order_id = o.order_id
+
+
         JOIN menus m
         ON oi.menu_id = m.menu_id
+
+
+        WHERE o.order_status NOT IN ('취소','CANCELLED')
 
 
         GROUP BY
@@ -92,12 +111,18 @@
 
         LIMIT 5
 
+
     </select>
+
+
+
     <!-- =========================
          매출 히스토리
          ========================= -->
     <select id="getSalesHistory"
             resultType="com.bunshik.admin.dto.SalesHistoryResponse">
+
+
         SELECT
 
         DATE(o.created_at) AS salesDate,
@@ -110,12 +135,18 @@
         FROM orders o
 
 
-        WHERE o.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        WHERE o.created_at >= DATE_SUB(CURDATE(),INTERVAL 30 DAY)
+
+        AND o.order_status NOT IN ('취소','CANCELLED')
 
 
         GROUP BY DATE(o.created_at)
 
 
         ORDER BY salesDate ASC
+
+
     </select>
+
+
 </mapper>

@@ -39,11 +39,7 @@ public class AdminOrderController {
     public int updateStatus(@PathVariable Integer orderId,
                             @RequestBody AdminOrderStatusRequestDto dto) {
 
-        Order order = new Order();
-        order.setOrderId(orderId);
-        order.setOrderStatus(dto.getOrderStatus());
-
-        return adminOrderService.updateStatus(order);
+        return adminOrderService.updateStatus(orderId, dto);
     }
 
     // 주문 취소
