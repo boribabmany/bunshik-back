@@ -1,9 +1,13 @@
 package com.bunshik.admin.controller;
 
+import com.bunshik.admin.dto.AdminOptionRequestDto;
 import com.bunshik.admin.service.AdminOptionService;
 import com.bunshik.common.entity.Option;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
@@ -27,18 +31,51 @@ public class AdminOptionController {
     }
 
     // 옵션 등록
-   @PostMapping
-   public int Option (@RequestBody Option option) {
-        return adminOptionService.insert(option);
-   }
-    // 옵션 수정
-    @PutMapping("/{optionId}")
-    public int update(@PathVariable Long optionId,
-                      @RequestBody Option option) {
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public int insert(
+            @RequestParam("option") String option,
+            @RequestParam(value = "file", required = false)
+            MultipartFile file
+    ) throws Exception {
 
-        option.setOptionId(optionId);
-        return adminOptionService.update(option);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        AdminOptionRequestDto dto =
+                objectMapper.readValue(
+                        option,
+                        AdminOptionRequestDto.class
+                );
+
+        return adminOptionService.insert(dto, file);
     }
+
+    // 옵션 수정
+    @PutMapping(
+            value = "/{optionId}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public int update(
+            @PathVariable Long optionId,
+            @RequestParam("option") String option,
+            @RequestParam(value = "file", required = false)
+            MultipartFile file
+    ) throws Exception {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        AdminOptionRequestDto dto =
+                objectMapper.readValue(
+                        option,
+                        AdminOptionRequestDto.class
+                );
+
+        return adminOptionService.update(
+                optionId,
+                dto,
+                file
+        );
+    }
+
     // 옵션 삭제
     @DeleteMapping("/{optionId}")
     public int delete(@PathVariable Long optionId) {

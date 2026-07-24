@@ -72,20 +72,28 @@
         )
 
     </insert>
-
     <!-- 수정 -->
     <update id="update"
             parameterType="com.bunshik.common.entity.Menu">
 
         UPDATE menus
-        SET
-        menu_name = #{menuName},
-        price = #{price},
-        category = #{category},
-        image_url = #{imageUrl},
-        description = #{description},
-        is_available = #{isAvailable},
-        sold_out_reason = #{soldOutReason}
+
+        <set>
+
+            menu_name = #{menuName},
+            price = #{price},
+            category = #{category},
+
+            <if test="imageUrl != null">
+                image_url = #{imageUrl},
+            </if>
+
+            description = #{description},
+            is_available = #{isAvailable},
+            sold_out_reason = #{soldOutReason}
+
+        </set>
+
         WHERE menu_id = #{menuId}
 
     </update>
@@ -99,5 +107,4 @@
         WHERE menu_id = #{menuId}
 
     </delete>
-
 </mapper>

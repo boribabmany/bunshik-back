@@ -5,7 +5,6 @@
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.bunshik.admin.mappers.AdminSalesMapper">
-
     <!-- =========================
          매출 요약 카드
          ========================= -->
@@ -13,7 +12,6 @@
             resultType="com.bunshik.admin.dto.AdminSalesSummaryResponse">
 
         SELECT
-
         IFNULL(SUM(
         CASE
         WHEN DATE(o.created_at) = CURDATE()
@@ -21,8 +19,6 @@
         ELSE 0
         END
         ),0) AS todaySales,
-
-
         COUNT(
         CASE
         WHEN DATE(o.created_at) = CURDATE()
@@ -54,99 +50,49 @@
 
 
         IFNULL(AVG(o.total_price),0) AS averageOrderPrice,
-
-
         COUNT(
         CASE
         WHEN o.order_status IN ('완료','COMPLETED')
         THEN o.order_id
         END
         ) AS completedOrders
-
-
         FROM orders o
-
         WHERE o.order_status NOT IN ('취소','CANCELLED')
-
-
     </select>
-
-
-
     <!-- =========================
          인기 메뉴 TOP 5
          ========================= -->
     <select id="getPopularMenus"
             resultType="com.bunshik.admin.dto.PopularMenuResponse">
-
         SELECT
-
         m.menu_name AS menuName,
-
         SUM(oi.quantity) AS orderCount
-
-
         FROM order_items oi
-
-
         JOIN orders o
         ON oi.order_id = o.order_id
-
-
         JOIN menus m
         ON oi.menu_id = m.menu_id
-
-
         WHERE o.order_status NOT IN ('취소','CANCELLED')
-
-
         GROUP BY
         m.menu_id,
         m.menu_name
-
-
         ORDER BY
         orderCount DESC
-
-
         LIMIT 5
-
-
     </select>
-
-
-
     <!-- =========================
          매출 히스토리
          ========================= -->
     <select id="getSalesHistory"
             resultType="com.bunshik.admin.dto.SalesHistoryResponse">
-
-
         SELECT
-
         DATE(o.created_at) AS salesDate,
-
         COUNT(o.order_id) AS orderCount,
-
         SUM(o.total_price) AS totalSales
-
-
         FROM orders o
-
-
         WHERE o.created_at >= DATE_SUB(CURDATE(),INTERVAL 30 DAY)
-
         AND o.order_status NOT IN ('취소','CANCELLED')
-
-
         GROUP BY DATE(o.created_at)
-
-
         ORDER BY salesDate ASC
-
-
     </select>
-
-
 </mapper>
