@@ -2,7 +2,7 @@ package com.bunshik.admin.controller;
 
 import com.bunshik.admin.dto.AdminMenuRequestDto;
 import com.bunshik.admin.service.AdminMenuService;
-import com.bunshik.common.dto.ApiResponse;
+import com.bunshik.common.ApiResponse;
 import com.bunshik.common.entity.Menu;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;

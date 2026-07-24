@@ -3,7 +3,7 @@ package com.bunshik.admin.controller;
 import com.bunshik.admin.dto.AdminOrderSearchRequestDto;
 import com.bunshik.admin.dto.AdminOrderStatusRequestDto;
 import com.bunshik.admin.service.AdminOrderService;
-import com.bunshik.common.dto.ApiResponse;
+import com.bunshik.common.ApiResponse;
 import com.bunshik.common.entity.Order;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
