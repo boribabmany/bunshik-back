@@ -4,6 +4,7 @@ import com.bunshik.common.ApiResponse;
 import com.bunshik.kiosk.dto.OrderCreateRequestDto;
 import com.bunshik.kiosk.dto.OrderResponseDto;
 import com.bunshik.kiosk.service.OrderService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +17,7 @@ public class OrderController {
 
     @PostMapping
     public ApiResponse<OrderResponseDto> createOrder(
-            @RequestBody OrderCreateRequestDto request) {
+            @Valid @RequestBody OrderCreateRequestDto request) {
 
         OrderResponseDto response = orderService.createOrder(request);
 

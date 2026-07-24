@@ -16,6 +16,7 @@ import java.util.Set;
 @Transactional
 public class PaymentService {
 
+
     private static final Set<String> VALID_PAYMENT_METHODS = Set.of("카드", "네이버페이", "카카오페이");
     private static final Set<String> EASY_PAY_METHODS = Set.of("네이버페이", "카카오페이");
 
