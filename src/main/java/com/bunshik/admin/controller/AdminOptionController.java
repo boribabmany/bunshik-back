@@ -2,6 +2,7 @@ package com.bunshik.admin.controller;
 
 import com.bunshik.admin.dto.AdminOptionRequestDto;
 import com.bunshik.admin.service.AdminOptionService;
+import com.bunshik.common.ApiResponse;
 import com.bunshik.common.entity.Option;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -20,21 +21,34 @@ public class AdminOptionController {
 
     // 옵션 전체 조회
     @GetMapping
-    public List<Option> findAll() {
-        return adminOptionService.findAll();
+    public ApiResponse<List<Option>> findAll() {
+
+        List<Option> options = adminOptionService.findAll();
+
+        return ApiResponse.success(options);
     }
 
     // 옵션 한 개 조회
     @GetMapping("/{optionId}")
-    public Option findById(@PathVariable Long optionId) {
-        return adminOptionService.findById(optionId);
+    public ApiResponse<Option> findById(
+            @PathVariable Long optionId
+    ) {
+
+        Option option = adminOptionService.findById(optionId);
+
+        return ApiResponse.success(option);
     }
 
     // 옵션 등록
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public int insert(
+    @PostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ApiResponse<Integer> insert(
             @RequestParam("option") String option,
-            @RequestParam(value = "file", required = false)
+            @RequestParam(
+                    value = "file",
+                    required = false
+            )
             MultipartFile file
     ) throws Exception {
 
@@ -46,7 +60,12 @@ public class AdminOptionController {
                         AdminOptionRequestDto.class
                 );
 
-        return adminOptionService.insert(dto, file);
+        int result = adminOptionService.insert(dto, file);
+
+        return ApiResponse.success(
+                result,
+                "옵션이 등록되었습니다."
+        );
     }
 
     // 옵션 수정
@@ -54,10 +73,13 @@ public class AdminOptionController {
             value = "/{optionId}",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    public int update(
+    public ApiResponse<Integer> update(
             @PathVariable Long optionId,
             @RequestParam("option") String option,
-            @RequestParam(value = "file", required = false)
+            @RequestParam(
+                    value = "file",
+                    required = false
+            )
             MultipartFile file
     ) throws Exception {
 
@@ -69,16 +91,29 @@ public class AdminOptionController {
                         AdminOptionRequestDto.class
                 );
 
-        return adminOptionService.update(
+        int result = adminOptionService.update(
                 optionId,
                 dto,
                 file
+        );
+
+        return ApiResponse.success(
+                result,
+                "옵션이 수정되었습니다."
         );
     }
 
     // 옵션 삭제
     @DeleteMapping("/{optionId}")
-    public int delete(@PathVariable Long optionId) {
-        return adminOptionService.delete(optionId);
+    public ApiResponse<Integer> delete(
+            @PathVariable Long optionId
+    ) {
+
+        int result = adminOptionService.delete(optionId);
+
+        return ApiResponse.success(
+                result,
+                "옵션이 삭제되었습니다."
+        );
     }
 }
