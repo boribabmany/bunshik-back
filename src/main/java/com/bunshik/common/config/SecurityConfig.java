@@ -16,7 +16,7 @@ public class SecurityConfig {
                 .cors(cors -> {})   // CorsConfig 적용
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/admin/**").permitAll()
+                        .requestMatchers("/api/admin/**").permitAll() //작업 진행중에는 permitAll() 로 임시
                         .requestMatchers("/api/**").permitAll()
                         .anyRequest().permitAll()
                 )
