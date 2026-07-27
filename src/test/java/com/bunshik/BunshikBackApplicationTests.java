@@ -1,4 +1,4 @@
-package com.bunshik.bunshikback;
+package com.bunshik;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

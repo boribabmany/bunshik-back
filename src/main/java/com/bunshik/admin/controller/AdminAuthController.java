@@ -1,8 +1,10 @@
 package com.bunshik.admin.controller;
 
 import com.bunshik.admin.dto.AdminLoginRequestDto;
+import com.bunshik.admin.dto.AdminLoginResponseDto;
 import com.bunshik.admin.service.AdminAuthService;
 import com.bunshik.common.entity.AdminUser;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/admin")
+@RequestMapping("/api/admin")
 public class AdminAuthController {
 
 
@@ -20,13 +22,10 @@ public class AdminAuthController {
 
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(
-            @RequestBody AdminLoginRequestDto dto){
+    public ResponseEntity<AdminLoginResponseDto> login(
+            @Valid @RequestBody AdminLoginRequestDto dto) {
 
-        AdminUser admin =
-                adminAuthService.login(dto);
-
-        return ResponseEntity.ok(admin);
+        return ResponseEntity.ok(adminAuthService.login(dto));
     }
 
 }
