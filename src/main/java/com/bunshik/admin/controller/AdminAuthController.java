@@ -3,7 +3,8 @@ package com.bunshik.admin.controller;
 import com.bunshik.admin.dto.AdminLoginRequestDto;
 import com.bunshik.admin.dto.AdminLoginResponseDto;
 import com.bunshik.admin.service.AdminAuthService;
-import com.bunshik.common.entity.AdminUser;
+import com.bunshik.common.ApiResponse;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,11 +23,14 @@ public class AdminAuthController {
 
 
     @PostMapping("/login")
-    public ResponseEntity<AdminLoginResponseDto> login(
+    public ResponseEntity<ApiResponse<AdminLoginResponseDto>> login(
             @Valid @RequestBody AdminLoginRequestDto dto) {
 
-        return ResponseEntity.ok(adminAuthService.login(dto));
-    }
+        AdminLoginResponseDto response = adminAuthService.login(dto);
 
+        return ResponseEntity.ok(
+                ApiResponse.success(response, "로그인 성공")
+        );
+    }
 }
 
