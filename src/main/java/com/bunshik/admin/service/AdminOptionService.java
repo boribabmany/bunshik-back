@@ -36,8 +36,7 @@ public class AdminOptionService {
     // 등록
     public int insert(
             AdminOptionRequestDto dto,
-            MultipartFile file
-    ) {
+            MultipartFile file) {
 
         String imageUrl = saveImage(file);
 
@@ -57,8 +56,7 @@ public class AdminOptionService {
         if (result > 0) {
             saveHistory(
                     "옵션 등록",
-                    dto.getOptionName() + " 옵션이 등록되었습니다."
-            );
+                    dto.getOptionName() + " 옵션이 등록되었습니다.");
         }
 
         return result;
@@ -68,8 +66,7 @@ public class AdminOptionService {
     public int update(
             Long optionId,
             AdminOptionRequestDto dto,
-            MultipartFile file
-    ) {
+            MultipartFile file) {
 
         Option oldOption = adminOptionMapper.findById(optionId);
 
@@ -90,10 +87,13 @@ public class AdminOptionService {
         int result = adminOptionMapper.update(option);
 
         if (result > 0) {
+            if (file != null && !file.isEmpty()) {
+                deleteImage(oldOption);
+            }
+
             saveHistory(
                     "옵션 수정",
-                    dto.getOptionName() + " 옵션이 수정되었습니다."
-            );
+                    dto.getOptionName() + " 옵션이 수정되었습니다.");
         }
 
         return result;
@@ -112,8 +112,7 @@ public class AdminOptionService {
 
             saveHistory(
                     "옵션 삭제",
-                    "옵션(ID: " + optionId + ")이 삭제되었습니다."
-            );
+                    "옵션(ID: " + optionId + ")이 삭제되었습니다.");
         }
 
         return result;
@@ -134,8 +133,7 @@ public class AdminOptionService {
                 originalName = "image";
             }
 
-            String saveName =
-                    UUID.randomUUID() + "_" + originalName;
+            String saveName = UUID.randomUUID() + "_" + originalName;
 
             Path uploadDir = Paths.get(uploadPath);
 
@@ -146,16 +144,14 @@ public class AdminOptionService {
             Files.copy(
                     file.getInputStream(),
                     savePath,
-                    StandardCopyOption.REPLACE_EXISTING
-            );
+                    StandardCopyOption.REPLACE_EXISTING);
 
             return "/images/options/" + saveName;
 
         } catch (IOException e) {
             throw new RuntimeException(
                     "옵션 이미지 저장 실패",
-                    e
-            );
+                    e);
         }
     }
 
@@ -170,30 +166,26 @@ public class AdminOptionService {
 
         try {
 
-            String fileName =
-                    Paths.get(option.getOptionImage())
-                            .getFileName()
-                            .toString();
+            String fileName = Paths.get(option.getOptionImage())
+                    .getFileName()
+                    .toString();
 
-            Path imagePath =
-                    Paths.get(uploadPath)
-                            .resolve(fileName);
+            Path imagePath = Paths.get(uploadPath)
+                    .resolve(fileName);
 
             Files.deleteIfExists(imagePath);
 
         } catch (IOException e) {
             throw new RuntimeException(
                     "옵션 이미지 삭제 실패",
-                    e
-            );
+                    e);
         }
     }
 
     // 관리자 변경 내역 저장
     private void saveHistory(
             String title,
-            String description
-    ) {
+            String description) {
 
         AdminHistory history = new AdminHistory();
 

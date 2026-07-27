@@ -97,8 +97,11 @@ public class AdminMenuService {
             MultipartFile file
     ) {
 
+        Menu oldMenu = menuMapper.findById(menuId);
+        boolean imageChanged = file != null && !file.isEmpty();
+
         // 새 이미지 저장
-        if (file != null && !file.isEmpty()) {
+        if (imageChanged) {
 
             try {
 
@@ -142,7 +145,6 @@ public class AdminMenuService {
         if (dto.getImageUrl() != null) {
             menu.setImageUrl(dto.getImageUrl());
         } else {
-            Menu oldMenu = menuMapper.findById(menuId);
             if (oldMenu != null) {
                 menu.setImageUrl(oldMenu.getImageUrl());
             }
@@ -155,6 +157,10 @@ public class AdminMenuService {
         int result = menuMapper.update(menu);
 
         if (result > 0) {
+            if (imageChanged) {
+                deleteImage(oldMenu);
+            }
+
             saveHistory(
                     "메뉴 수정",
                     dto.getMenuName() + " 메뉴가 수정되었습니다."
@@ -172,24 +178,7 @@ public class AdminMenuService {
         int result = menuMapper.delete(menuId);
 
         if (result > 0) {
-
-            if (menu != null && menu.getImageUrl() != null) {
-
-                try {
-
-                    String fileName = Paths.get(menu.getImageUrl())
-                            .getFileName()
-                            .toString();
-
-                    Path path = Paths.get(uploadPath)
-                            .resolve(fileName);
-
-                    Files.deleteIfExists(path);
-
-                } catch (IOException e) {
-                    throw new RuntimeException("이미지 삭제 실패", e);
-                }
-            }
+            deleteImage(menu);
 
             saveHistory(
                     "메뉴 삭제",
@@ -198,6 +187,31 @@ public class AdminMenuService {
         }
 
         return result;
+    }
+
+    // 이미지 삭제
+    private void deleteImage(Menu menu) {
+
+        if (menu == null
+                || menu.getImageUrl() == null
+                || menu.getImageUrl().isBlank()) {
+            return;
+        }
+
+        try {
+
+            String fileName = Paths.get(menu.getImageUrl())
+                    .getFileName()
+                    .toString();
+
+            Path imagePath = Paths.get(uploadPath)
+                    .resolve(fileName);
+
+            Files.deleteIfExists(imagePath);
+
+        } catch (IOException e) {
+            throw new RuntimeException("메뉴 이미지 삭제 실패", e);
+        }
     }
 
     // 변경 내역 저장
