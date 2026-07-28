@@ -8,10 +8,12 @@ import lombok.Setter;
 public class AdminMenuRequestDto {
 
     private String menuName;
+    private String menuNameEn;
     private Integer price;
     private String category;
     private String imageUrl;
     private String description;
+    private String descriptionEn;
     private Boolean isAvailable;
     private String soldOutReason;
 }

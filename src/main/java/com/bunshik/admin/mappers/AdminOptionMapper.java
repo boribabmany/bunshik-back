@@ -17,5 +17,9 @@ public interface AdminOptionMapper {
 
     int update(Option option);
 
-    int delete(@Param("optionId") Long optionId);
+    // 옵션 판매중단: 논리 삭제
+    int stopSelling(@Param("optionId") Long optionId);
+
+    // 옵션 판매재개
+    int resumeSelling(@Param("optionId") Long optionId);
 }

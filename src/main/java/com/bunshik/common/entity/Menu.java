@@ -11,11 +11,14 @@ public class Menu {
 
     private Long menuId;
     private String menuName;
+    private String menuNameEn;
     private Integer price;
     private String category;
     private String imageUrl;
     private String description;
+    private String descriptionEn;
     private Boolean isAvailable;
+    private Boolean isVisible;      // 추가
     private String soldOutReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

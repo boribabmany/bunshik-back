@@ -103,17 +103,31 @@ public class AdminOptionController {
         );
     }
 
-    // 옵션 삭제
-    @DeleteMapping("/{optionId}")
-    public ApiResponse<Integer> delete(
+    // 옵션 판매중단
+    @PatchMapping("/{optionId}/stop")
+    public ApiResponse<Integer> stopSelling(
             @PathVariable Long optionId
     ) {
 
-        int result = adminOptionService.delete(optionId);
+        int result = adminOptionService.stopSelling(optionId);
 
         return ApiResponse.success(
                 result,
-                "옵션이 삭제되었습니다."
+                "옵션 판매가 중단되었습니다."
+        );
+    }
+
+    // 옵션 판매재개
+    @PatchMapping("/{optionId}/resume")
+    public ApiResponse<Integer> resumeSelling(
+            @PathVariable Long optionId
+    ) {
+
+        int result = adminOptionService.resumeSelling(optionId);
+
+        return ApiResponse.success(
+                result,
+                "옵션 판매가 재개되었습니다."
         );
     }
 }
