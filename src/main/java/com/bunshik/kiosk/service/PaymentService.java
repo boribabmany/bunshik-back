@@ -16,12 +16,8 @@ import java.util.Set;
 @Transactional
 public class PaymentService {
 
-
     private static final Set<String> VALID_PAYMENT_METHODS = Set.of("카드", "네이버페이", "카카오페이");
     private static final Set<String> EASY_PAY_METHODS = Set.of("네이버페이", "카카오페이");
-
-    private static final double CARD_FAILURE_RATE = 0.1;
-    private static final double EASY_PAY_FAILURE_RATE = 0.1;
 
     private final PaymentMapper paymentMapper;
     private final Random random = new Random();
@@ -54,12 +50,12 @@ public class PaymentService {
                 result.failReason
         );
 
-        if (result.success) {
-            paymentMapper.updateOrderStatus(order.getOrderId(), "접수");
-        }
+        // 결제 성공 → 접수(주방으로 전달), 실패 → 취소(관리자 화면에 노출 안 됨)
+        paymentMapper.updateOrderStatus(order.getOrderId(), result.success ? "접수" : "취소");
 
         return PaymentResponseDto.builder()
                 .status(result.success ? "성공" : "실패")
+                .failType(result.failType)
                 .failReason(result.failReason)
                 .build();
     }
@@ -67,15 +63,30 @@ public class PaymentService {
     private PaymentResult simulatePayment(String paymentMethod) {
 
         if (paymentMethod.equals("카드")) {
-            return random.nextDouble() < CARD_FAILURE_RATE
-                    ? PaymentResult.fail("카드 승인이 거절되었습니다.")
-                    : PaymentResult.success();
+            double roll = random.nextDouble();
+
+            if (roll < 0.06) {
+                return PaymentResult.fail("declined", "카드 승인이 거절되었습니다.");
+            }
+            if (roll < 0.08) {
+                return PaymentResult.fail("card-error", "카드 정보를 확인할 수 없습니다.");
+            }
+            if (roll < 0.10) {
+                return PaymentResult.fail("timeout", "결제 승인 응답이 지연되고 있습니다.");
+            }
+            return PaymentResult.success();
         }
 
         if (EASY_PAY_METHODS.contains(paymentMethod)) {
-            return random.nextDouble() < EASY_PAY_FAILURE_RATE
-                    ? PaymentResult.fail(paymentMethod + " 승인이 거절되었습니다.")
-                    : PaymentResult.success();
+            double roll = random.nextDouble();
+
+            if (roll < 0.08) {
+                return PaymentResult.fail("declined", paymentMethod + " 승인이 거절되었습니다.");
+            }
+            if (roll < 0.10) {
+                return PaymentResult.fail("timeout", paymentMethod + " 응답이 지연되고 있습니다.");
+            }
+            return PaymentResult.success();
         }
 
         return PaymentResult.success();
@@ -83,19 +94,21 @@ public class PaymentService {
 
     private static class PaymentResult {
         final boolean success;
+        final String failType;
         final String failReason;
 
-        private PaymentResult(boolean success, String failReason) {
+        private PaymentResult(boolean success, String failType, String failReason) {
             this.success = success;
+            this.failType = failType;
             this.failReason = failReason;
         }
 
         static PaymentResult success() {
-            return new PaymentResult(true, null);
+            return new PaymentResult(true, null, null);
         }
 
-        static PaymentResult fail(String reason) {
-            return new PaymentResult(false, reason);
+        static PaymentResult fail(String failType, String reason) {
+            return new PaymentResult(false, failType, reason);
         }
     }
 }
