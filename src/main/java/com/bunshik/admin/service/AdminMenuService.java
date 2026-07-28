@@ -21,7 +21,7 @@ public class AdminMenuService {
     private final AdminMenuMapper menuMapper;
     private final AdminHistoryMapper adminHistoryMapper;
 
-    // 이미지 저장 경로
+    // 실제 이미지 저장 경로
     private final String uploadPath = "uploads/menus/";
 
     // 메뉴 전체 조회
@@ -34,38 +34,12 @@ public class AdminMenuService {
         return menuMapper.findById(menuId);
     }
 
-    // 메뉴 등록 (파일 업로드 포함)
+    // 메뉴 등록
     public int insert(AdminMenuRequestDto dto, MultipartFile file) {
 
         if (file != null && !file.isEmpty()) {
-            try {
-
-                String originalName = file.getOriginalFilename();
-                if (originalName == null) {
-                    originalName = "image";
-                }
-
-                String saveName = UUID.randomUUID() + "_" + originalName;
-
-                Path uploadDir = Paths.get(uploadPath);
-
-                if (!Files.exists(uploadDir)) {
-                    Files.createDirectories(uploadDir);
-                }
-
-                Path savePath = uploadDir.resolve(saveName);
-
-                Files.copy(
-                        file.getInputStream(),
-                        savePath,
-                        StandardCopyOption.REPLACE_EXISTING
-                );
-
-                dto.setImageUrl("/images/menus/" + saveName);
-
-            } catch (IOException e) {
-                throw new RuntimeException("이미지 저장 실패", e);
-            }
+            String imageUrl = saveImage(file);
+            dto.setImageUrl(imageUrl);
         }
 
         Menu menu = new Menu();
@@ -98,40 +72,16 @@ public class AdminMenuService {
     ) {
 
         Menu oldMenu = menuMapper.findById(menuId);
+
+        if (oldMenu == null) {
+            throw new RuntimeException("메뉴를 찾을 수 없습니다.");
+        }
+
         boolean imageChanged = file != null && !file.isEmpty();
 
-        // 새 이미지 저장
         if (imageChanged) {
-
-            try {
-
-                String originalName = file.getOriginalFilename();
-
-                if (originalName == null) {
-                    originalName = "image";
-                }
-
-                String saveName = UUID.randomUUID() + "_" + originalName;
-
-                Path uploadDir = Paths.get(uploadPath);
-
-                if (!Files.exists(uploadDir)) {
-                    Files.createDirectories(uploadDir);
-                }
-
-                Path savePath = uploadDir.resolve(saveName);
-
-                Files.copy(
-                        file.getInputStream(),
-                        savePath,
-                        StandardCopyOption.REPLACE_EXISTING
-                );
-
-                dto.setImageUrl("/images/menus/" + saveName);
-
-            } catch (IOException e) {
-                throw new RuntimeException("이미지 수정 저장 실패", e);
-            }
+            String imageUrl = saveImage(file);
+            dto.setImageUrl(imageUrl);
         }
 
         Menu menu = new Menu();
@@ -141,13 +91,11 @@ public class AdminMenuService {
         menu.setPrice(dto.getPrice());
         menu.setCategory(dto.getCategory());
 
-        // 이미지 없으면 기존 이미지 유지
-        if (dto.getImageUrl() != null) {
+        // 새 이미지가 없으면 기존 이미지 유지
+        if (dto.getImageUrl() != null && !dto.getImageUrl().isBlank()) {
             menu.setImageUrl(dto.getImageUrl());
         } else {
-            if (oldMenu != null) {
-                menu.setImageUrl(oldMenu.getImageUrl());
-            }
+            menu.setImageUrl(oldMenu.getImageUrl());
         }
 
         menu.setDescription(dto.getDescription());
@@ -189,6 +137,40 @@ public class AdminMenuService {
         return result;
     }
 
+    // 이미지 저장
+    private String saveImage(MultipartFile file) {
+
+        try {
+            String originalName = file.getOriginalFilename();
+
+            if (originalName == null || originalName.isBlank()) {
+                originalName = "image";
+            }
+
+            String saveName = UUID.randomUUID() + "_" + originalName;
+
+            Path uploadDir = Paths.get(uploadPath);
+
+            if (!Files.exists(uploadDir)) {
+                Files.createDirectories(uploadDir);
+            }
+
+            Path savePath = uploadDir.resolve(saveName);
+
+            Files.copy(
+                    file.getInputStream(),
+                    savePath,
+                    StandardCopyOption.REPLACE_EXISTING
+            );
+
+            // DB에 저장되는 접근 경로
+            return "/uploads/menus/" + saveName;
+
+        } catch (IOException e) {
+            throw new RuntimeException("이미지 저장 실패", e);
+        }
+    }
+
     // 이미지 삭제
     private void deleteImage(Menu menu) {
 
@@ -199,7 +181,6 @@ public class AdminMenuService {
         }
 
         try {
-
             String fileName = Paths.get(menu.getImageUrl())
                     .getFileName()
                     .toString();

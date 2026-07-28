@@ -93,6 +93,6 @@
         WHERE o.created_at >= DATE_SUB(CURDATE(),INTERVAL 30 DAY)
         AND o.order_status NOT IN ('취소','CANCELLED')
         GROUP BY DATE(o.created_at)
-        ORDER BY salesDate ASC
+        ORDER BY salesDate desc
     </select>
 </mapper>

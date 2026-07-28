@@ -16,7 +16,7 @@
         option_image,
         option_is_available
         FROM options
-        ORDER BY option_id DESC
+        ORDER BY option_id ASC
 
     </select>
 

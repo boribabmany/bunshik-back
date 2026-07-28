@@ -14,7 +14,7 @@
         description,
         created_at
         FROM admin_history
-        ORDER BY created_at DESC
+        ORDER BY created_at desc
 
     </select>
     <insert id="insertHistory">

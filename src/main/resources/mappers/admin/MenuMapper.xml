@@ -21,7 +21,7 @@
         created_at,
         updated_at
         FROM menus
-        ORDER BY menu_id DESC
+        ORDER BY menu_id ASC
 
     </select>
 
