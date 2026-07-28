@@ -13,8 +13,10 @@ import java.nio.file.Paths;
 @RestController
 public class AdminFileController {
 
-    // 프로젝트 실행 위치 기준 절대경로로 고정
-    private final String uploadPath = System.getProperty("user.dir") + "/uploads/";
+    private final Path uploadPath =
+            Paths.get(System.getProperty("user.dir"), "uploads")
+                    .toAbsolutePath()
+                    .normalize();
 
     @GetMapping("/uploads/{folder}/{filename}")
     public ResponseEntity<Resource> getImage(
@@ -22,18 +24,23 @@ public class AdminFileController {
             @PathVariable String filename
     ) {
         try {
-            Path filePath = Paths.get(uploadPath)
+            Path filePath = uploadPath
                     .resolve(folder)
                     .resolve(filename)
                     .normalize();
 
+            if (!filePath.startsWith(uploadPath)) {
+                return ResponseEntity.badRequest().build();
+            }
+
             Resource resource = new UrlResource(filePath.toUri());
 
-            if (!resource.exists()) {
+            if (!resource.exists() || !resource.isReadable()) {
                 return ResponseEntity.notFound().build();
             }
 
             String contentType = Files.probeContentType(filePath);
+
             if (contentType == null) {
                 contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
             }
