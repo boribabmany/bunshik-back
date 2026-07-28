@@ -24,12 +24,15 @@
     <select id="findAll" resultMap="menuResultMap">
         SELECT
         m.menu_id, m.menu_name, m.menu_name_en, m.price, m.category, m.image_url, m.is_available,
-        m.description, m.description_en,
+        m.description, m.description_en, m.sort_order,
         o.option_id, o.option_name, o.option_name_en, o.option_price, o.option_image
         FROM menus m
         LEFT JOIN menu_options mo ON m.menu_id = mo.menu_id
         LEFT JOIN options o ON mo.option_id = o.option_id
-        AND o.option_is_available = TRUE  <!-- 추가: 품절 옵션 노출 방지 -->
+        AND o.option_is_available = TRUE
+        AND o.is_visible = TRUE
+        WHERE m.is_visible = TRUE
+        ORDER BY m.sort_order ASC
     </select>
 
 </mapper>
