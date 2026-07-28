@@ -74,16 +74,29 @@ public class AdminMenuController {
         );
     }
 
-    // 메뉴 삭제
-    @DeleteMapping("/{menuId}")
-    public ApiResponse<Integer> delete(
+    // 메뉴 판매중단
+    @PatchMapping("/{menuId}/stop")
+    public ApiResponse<Integer> stopSelling(
             @PathVariable Long menuId
     ) {
-        int result = adminMenuService.delete(menuId);
+        int result = adminMenuService.stopSelling(menuId);
 
         return ApiResponse.success(
                 result,
-                "메뉴가 삭제되었습니다."
+                "메뉴 판매가 중단되었습니다."
+        );
+    }
+
+    // 메뉴 판매재개
+    @PatchMapping("/{menuId}/resume")
+    public ApiResponse<Integer> resumeSelling(
+            @PathVariable Long menuId
+    ) {
+        int result = adminMenuService.resumeSelling(menuId);
+
+        return ApiResponse.success(
+                result,
+                "메뉴 판매가 재개되었습니다."
         );
     }
 }

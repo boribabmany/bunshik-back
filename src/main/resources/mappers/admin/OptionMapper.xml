@@ -12,9 +12,11 @@
         SELECT
         option_id,
         option_name,
+        option_name_en,
         option_price,
         option_image,
-        option_is_available
+        option_is_available,
+        is_visible
         FROM options
         ORDER BY option_id ASC
 
@@ -28,9 +30,11 @@
         SELECT
         option_id,
         option_name,
+        option_name_en,
         option_price,
         option_image,
-        option_is_available
+        option_is_available,
+        is_visible
         FROM options
         WHERE option_id = #{optionId}
 
@@ -43,16 +47,20 @@
         INSERT INTO options
         (
         option_name,
+        option_name_en,
         option_price,
         option_image,
-        option_is_available
+        option_is_available,
+        is_visible
         )
         VALUES
         (
         #{optionName},
+        #{optionNameEn},
         #{optionPrice},
         #{optionImage},
-        #{optionIsAvailable}
+        #{optionIsAvailable},
+        #{isVisible}
         )
 
     </insert>
@@ -64,6 +72,7 @@
         UPDATE options
         SET
         option_name = #{optionName},
+        option_name_en = #{optionNameEn},
         option_price = #{optionPrice},
         option_image = #{optionImage},
         option_is_available = #{optionIsAvailable}
@@ -71,14 +80,28 @@
 
     </update>
 
-    <!-- 삭제 -->
-    <delete id="delete"
+    <!-- 판매중단 -->
+    <update id="stopSelling"
             parameterType="long">
 
-        DELETE
-        FROM options
+        UPDATE options
+        SET
+        is_visible = false,
+        option_is_available = false
         WHERE option_id = #{optionId}
 
-    </delete>
+    </update>
+
+    <!-- 판매재개 -->
+    <update id="resumeSelling"
+            parameterType="long">
+
+        UPDATE options
+        SET
+        is_visible = true,
+        option_is_available = true
+        WHERE option_id = #{optionId}
+
+    </update>
 
 </mapper>

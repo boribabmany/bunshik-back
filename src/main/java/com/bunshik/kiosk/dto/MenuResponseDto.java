@@ -18,6 +18,8 @@ public class MenuResponseDto {
     @JsonProperty("menu_name_en")
     private String menuNameEn;
 
+    private String description;
+
     @JsonProperty("description_en")
     private String descriptionEn;
 

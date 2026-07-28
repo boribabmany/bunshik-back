@@ -47,9 +47,13 @@ public class AdminOptionService {
         Option option = new Option();
 
         option.setOptionName(dto.getOptionName());
+        option.setOptionNameEn(dto.getOptionNameEn());
         option.setOptionPrice(dto.getOptionPrice());
         option.setOptionImage(dto.getOptionImage());
         option.setOptionIsAvailable(dto.getOptionIsAvailable());
+
+        // 새 옵션은 기본적으로 표시
+        option.setIsVisible(true);
 
         int result = adminOptionMapper.insert(option);
 
@@ -80,6 +84,7 @@ public class AdminOptionService {
 
         option.setOptionId(optionId);
         option.setOptionName(dto.getOptionName());
+        option.setOptionNameEn(dto.getOptionNameEn());
         option.setOptionPrice(dto.getOptionPrice());
         option.setOptionImage(imageUrl);
         option.setOptionIsAvailable(dto.getOptionIsAvailable());
@@ -99,20 +104,41 @@ public class AdminOptionService {
         return result;
     }
 
-    // 삭제
-    public int delete(Long optionId) {
+    // 판매중단
+    public int stopSelling(Long optionId) {
 
         Option option = adminOptionMapper.findById(optionId);
 
-        int result = adminOptionMapper.delete(optionId);
+        int result = adminOptionMapper.stopSelling(optionId);
 
         if (result > 0) {
-
-            deleteImage(option);
+            String optionName = option != null
+                    ? option.getOptionName()
+                    : "옵션(ID: " + optionId + ")";
 
             saveHistory(
-                    "옵션 삭제",
-                    "옵션(ID: " + optionId + ")이 삭제되었습니다.");
+                    "옵션 판매중단",
+                    optionName + " 옵션의 판매가 중단되었습니다.");
+        }
+
+        return result;
+    }
+
+    // 판매재개
+    public int resumeSelling(Long optionId) {
+
+        Option option = adminOptionMapper.findById(optionId);
+
+        int result = adminOptionMapper.resumeSelling(optionId);
+
+        if (result > 0) {
+            String optionName = option != null
+                    ? option.getOptionName()
+                    : "옵션(ID: " + optionId + ")";
+
+            saveHistory(
+                    "옵션 판매재개",
+                    optionName + " 옵션의 판매가 재개되었습니다.");
         }
 
         return result;
@@ -126,7 +152,6 @@ public class AdminOptionService {
         }
 
         try {
-
             String originalName = file.getOriginalFilename();
 
             if (originalName == null || originalName.isBlank()) {
@@ -136,7 +161,6 @@ public class AdminOptionService {
             String saveName = UUID.randomUUID() + "_" + originalName;
 
             Path uploadDir = Paths.get(uploadPath);
-
             Files.createDirectories(uploadDir);
 
             Path savePath = uploadDir.resolve(saveName);
@@ -165,7 +189,6 @@ public class AdminOptionService {
         }
 
         try {
-
             String fileName = Paths.get(option.getOptionImage())
                     .getFileName()
                     .toString();

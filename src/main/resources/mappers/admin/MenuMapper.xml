@@ -12,11 +12,14 @@
         SELECT
         menu_id,
         menu_name,
+        menu_name_en,
         price,
         category,
         image_url,
         description,
+        description_en,
         is_available,
+        is_visible,
         sold_out_reason,
         created_at,
         updated_at
@@ -33,11 +36,14 @@
         SELECT
         menu_id,
         menu_name,
+        menu_name_en,
         price,
         category,
         image_url,
         description,
+        description_en,
         is_available,
+        is_visible,
         sold_out_reason,
         created_at,
         updated_at
@@ -53,25 +59,32 @@
         INSERT INTO menus
         (
         menu_name,
+        menu_name_en,
         price,
         category,
         image_url,
         description,
+        description_en,
         is_available,
+        is_visible,
         sold_out_reason
         )
         VALUES
         (
         #{menuName},
+        #{menuNameEn},
         #{price},
         #{category},
         #{imageUrl},
         #{description},
+        #{descriptionEn},
         #{isAvailable},
+        true,
         #{soldOutReason}
         )
 
     </insert>
+
     <!-- 수정 -->
     <update id="update"
             parameterType="com.bunshik.common.entity.Menu">
@@ -79,8 +92,8 @@
         UPDATE menus
 
         <set>
-
             menu_name = #{menuName},
+            menu_name_en = #{menuNameEn},
             price = #{price},
             category = #{category},
 
@@ -89,22 +102,41 @@
             </if>
 
             description = #{description},
+            description_en = #{descriptionEn},
             is_available = #{isAvailable},
-            sold_out_reason = #{soldOutReason}
-
+            sold_out_reason = #{soldOutReason},
+            updated_at = NOW()
         </set>
 
         WHERE menu_id = #{menuId}
 
     </update>
 
-    <!-- 삭제 -->
-    <delete id="delete"
+    <!-- 판매중단: 논리 삭제 -->
+    <update id="stopSelling"
             parameterType="long">
 
-        DELETE
-        FROM menus
+        UPDATE menus
+        SET
+        is_visible = false,
+        is_available = false,
+        updated_at = NOW()
         WHERE menu_id = #{menuId}
 
-    </delete>
+    </update>
+
+    <!-- 판매재개 -->
+    <update id="resumeSelling"
+            parameterType="long">
+
+        UPDATE menus
+        SET
+        is_visible = true,
+        is_available = true,
+        sold_out_reason = NULL,
+        updated_at = NOW()
+        WHERE menu_id = #{menuId}
+
+    </update>
+
 </mapper>
