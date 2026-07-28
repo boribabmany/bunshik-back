@@ -17,6 +17,7 @@
         order_status,
         created_at
         FROM orders
+        WHERE ORDER_STATUS NOT iN('결제대기', '취소')
         ORDER BY order_id DESC
 
     </select>
