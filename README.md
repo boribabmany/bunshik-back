@@ -63,6 +63,28 @@ MySQL 기준, 총 9개 테이블로 구성됩니다.
 
 전체 `CREATE TABLE` / `INSERT` 스크립트는 `docs/bunshik_db_setup.sql`(또는 팀 공유 문서)을 참고하세요.
 
+### `menus` 테이블 컬럼 상세
+
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| `menu_id` | INT (PK) | 메뉴 고유 ID |
+| `menu_name` | VARCHAR | 메뉴명(한글) |
+| `menu_name_en` | VARCHAR | 메뉴명(영문) |
+| `price` | INT | 가격 |
+| `category` | VARCHAR | 카테고리 |
+| `image_url` | VARCHAR | 이미지 경로 (상대경로로 저장, 예: `/uploads/menus/xxx.webp`) |
+| `description` / `description_en` | VARCHAR | 메뉴 설명(한/영) |
+| `is_available` | BOOLEAN | **품절 여부**. `false`면 화면에는 노출되지만 "품절" 표시 + 선택 불가 |
+| `is_visible` | BOOLEAN | **판매중단 여부**. `false`면 화면에서 완전히 숨김 (조회 쿼리 자체에서 필터링) |
+| `sort_order` | INT | 메뉴 노출 순서. 값이 작을수록 먼저 표시됨 (`ORDER BY sort_order ASC`) |
+| `sold_out_reason` | VARCHAR | 품절 사유(선택) |
+| `created_at` / `updated_at` | DATETIME | 생성/수정 시각 |
+
+> `is_available`(품절)과 `is_visible`(판매중단)은 서로 다른 개념입니다. 품절은 일시적(재고 소진)이라 메뉴가 보이되 선택만 막고, 판매중단은 메뉴 자체를 화면에서 제거합니다.
+
+이미지 경로는 DB에 항상 **상대경로**로 저장하며(`/uploads/...`), 프론트에서 API 응답을 받을 때 `getImageUrl()` 헬퍼로 백엔드 base URL을 붙여 완성된 절대경로로 변환해 사용합니다.
+
+
 ### Entity ↔ 테이블 매칭 (완료된 9종)
 
 | Entity 클래스 | 대응 테이블 |
@@ -89,14 +111,27 @@ mybatis.configuration.map-underscore-to-camel-case=true
 
 ## 진행 상황
 
-### 완료
+### 완료 (kiosk)
+
+| 기능 | Mapper | DTO | Service | Controller |
+|---|---|---|---|---|
+| 메뉴 조회 | `MenuMapper` | `MenuResponseDto` | (Menu 조회 로직) | `GET /api/menus` |
+| 주문 생성 | `OrderMapper` | `OrderCreateRequestDto`, `OrderResponseDto` | `OrderService` | `POST /api/orders` |
+| 주문 취소 (결제 포기) | `OrderMapper` | - | `OrderService` | `PATCH /api/orders/{orderId}/cancel` |
+| 결제 시도 | `PaymentMapper` | `PaymentRequestDto`, `PaymentResponseDto` | `PaymentService` | `POST /api/payments` |
+
+### 진행 예정 / 확인 필요 (kiosk)
+
+| 기능 | Controller | 비고 |
+|---|---|---|
+| 옵션 단독 조회 | `GET /api/options` | 현재 메뉴 조회 응답에 옵션이 중첩(nested)되어 함께 내려감. 별도 엔드포인트 필요 여부 확인 필요 |
+| 주문 상세 조회 | `GET /api/orders/{orderId}` | 미구현. 새로고침 시 주문 내역 복구가 필요해지면 별도 구현 논의 필요 |
 
 - [x] Gradle + Spring Boot 4.0.7 + Java 25 프로젝트 초기 세팅
 - [x] `common.entity` 9종 (Menu, Option, MenuOption, Order, OrderItem, OrderItemOption, Payment, AdminUser, AdminHistory)
 - [x] `common.ApiResponse` 공통 응답 형식
 - [x] 원격 MySQL(팀 공유 DB) 연결 설정
 
-### 진행 예정 (kiosk)
 
 | 기능 | Mapper | DTO | Service | Controller |
 |---|---|---|---|---|
@@ -104,6 +139,13 @@ mybatis.configuration.map-underscore-to-camel-case=true
 | 옵션 조회 | `OptionMapper` | `OptionResponseDto` | `OptionService` | `GET /api/options` |
 | 주문 생성/조회 | `OrderMapper` | `OrderCreateRequestDto`, `OrderResponseDto` | `OrderService` | `POST /api/orders`, `GET /api/orders/{orderId}` |
 | 결제 시도 | `PaymentMapper` | `PaymentRequestDto`, `PaymentResponseDto` | `PaymentService` | `POST /api/orders/{orderId}/payments` |
+
+---
+
+## 주문 상태(order_status) 관리 규칙
+
+`orders.order_status`는 다음 값을 가지며, 정해진 순서로만 전이됩니다. 
+
 
 ### 진행 예정 (admin, 담당자 별도 진행)
 
@@ -115,6 +157,28 @@ mybatis.configuration.map-underscore-to-camel-case=true
 | 변경 이력 조회 | `GET /api/admin/history` |
 
 ---
+### kiosk(고객) 측 규칙
+
+담당 파일: `OrderService.java`, `PaymentService.java`
+
+- 주문 생성(`POST /api/orders`) 시 `order_status`는 항상 `결제대기`로 시작합니다.
+- 결제 성공(`POST /api/payments`) 시 → `접수`로 전환됩니다.
+- **결제 실패 시 → `취소`가 아닌 `결제대기`를 유지**합니다. 카드 거절, 응답 지연 등은 일시적 실패이므로, 손님이 재시도(다른 카드, 다시 결제)할 수 있도록 주문을 살려둡니다.
+- 손님이 결제를 포기하고 뒤로가기를 누르면 → `PATCH /api/orders/{orderId}/cancel`을 호출합니다. 단, **`결제대기` 상태인 주문만 취소 가능**하며, 이미 `접수`/`조리중`/`완료`로 넘어간 주문은 `IllegalStateException`으로 차단됩니다.
+- **중복 결제 차단**: 동일 `order_id`에 대해 이미 `payment_status='성공'` 기록이 존재하면, 재결제 요청은 `IllegalArgumentException`("이미 결제가 완료된 주문입니다.")으로 거부됩니다. (`PaymentService.processPayment`)
+
+| 상태 전이 | 트리거 | 처리 위치 |
+|---|---|---|
+| `결제대기` 생성 | 주문 생성 | `OrderService.createOrder` |
+| `결제대기` → `접수` | 결제 성공 | `PaymentService.processPayment` |
+| `결제대기` 유지 | 결제 실패 | `PaymentService.processPayment` |
+| `결제대기` → `취소` | 손님이 결제 포기 | `OrderService.cancelOrder` |
+| (차단) | `결제대기`가 아닌 주문 취소 시도 | `OrderService.cancelOrder` |
+| (차단) | 이미 성공한 주문 재결제 시도 | `PaymentService.processPayment` |
+
+### admin(관리자) 측 규칙
+
+`kiosk-admin` 담당자가 별도로 관리·문서화합니다. (`접수 → 조리중 → 완료` 순서 강제, 완료 주문 취소 차단 등)
 
 ## 실행 방법
 

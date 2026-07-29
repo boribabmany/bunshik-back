@@ -23,4 +23,13 @@ public class OrderController {
 
         return ApiResponse.success(response);
     }
+
+    // 결제 포기 시 주문 취소
+    @PatchMapping("/{orderId}/cancel")
+    public ApiResponse<Void> cancelOrder(@PathVariable Integer orderId) {
+
+        orderService.cancelOrder(orderId);
+
+        return ApiResponse.success(null, "주문이 취소되었습니다.");
+    }
 }

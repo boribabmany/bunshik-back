@@ -50,8 +50,9 @@ public class PaymentService {
                 result.failReason
         );
 
-        // 결제 성공 → 접수(주방으로 전달), 실패 → 취소(관리자 화면에 노출 안 됨)
-        paymentMapper.updateOrderStatus(order.getOrderId(), result.success ? "접수" : "취소");
+        // 결제 성공 → 접수(주방으로 전달)
+        // 결제 실패 → 결제대기 유지 (재시도 가능하도록, 취소는 손님이 포기할 때만)
+        paymentMapper.updateOrderStatus(order.getOrderId(), result.success ? "접수" : "결제대기");
 
         return PaymentResponseDto.builder()
                 .status(result.success ? "성공" : "실패")

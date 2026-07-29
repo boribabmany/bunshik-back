@@ -48,4 +48,16 @@
         SELECT option_price FROM options WHERE option_id = #{optionId}
     </select>
 
+    <!-- 취소용: 현재 주문 상태 조회 -->
+    <select id="getOrderStatus" resultType="String">
+        SELECT order_status FROM orders WHERE order_id = #{orderId}
+    </select>
+
+    <!-- 주문 취소 (결제대기 상태인 주문만 서비스 레이어에서 검증 후 호출) -->
+    <update id="cancelOrder">
+        UPDATE orders
+        SET order_status = '취소'
+        WHERE order_id = #{orderId}
+    </update>
+
 </mapper>

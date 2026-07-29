@@ -45,6 +45,24 @@ public class OrderService {
                 .build();
     }
 
+    // 주문 취소 (손님이 결제를 포기했을 때)
+    public void cancelOrder(Integer orderId) {
+
+        String currentStatus = orderMapper.getOrderStatus(orderId);
+
+        if (currentStatus == null) {
+            throw new IllegalArgumentException("존재하지 않는 주문입니다: " + orderId);
+        }
+
+        // 결제대기 상태인 주문만 손님이 직접 취소할 수 있음
+        // (이미 접수/조리중/완료된 주문은 여기서 취소 불가)
+        if (!"결제대기".equals(currentStatus)) {
+            throw new IllegalStateException("결제 대기 중인 주문만 취소할 수 있습니다.");
+        }
+
+        orderMapper.cancelOrder(orderId);
+    }
+
     private int calculateTotalPrice(OrderCreateRequestDto request,
                                     Map<Integer, Integer> menuPriceCache,
                                     Map<Integer, Integer> optionPriceCache) {

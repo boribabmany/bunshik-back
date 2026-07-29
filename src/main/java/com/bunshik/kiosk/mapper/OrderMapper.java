@@ -27,4 +27,10 @@ public interface OrderMapper {
     Integer getMenuPrice(Integer menuId);
 
     Integer getOptionPrice(Integer optionId);
+
+    // 취소용: 현재 주문 상태 조회
+    String getOrderStatus(@Param("orderId") Integer orderId);
+
+    // 주문 취소 (상태를 '취소'로 변경)
+    void cancelOrder(@Param("orderId") Integer orderId);
 }
