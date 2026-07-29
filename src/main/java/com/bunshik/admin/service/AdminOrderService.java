@@ -8,6 +8,7 @@ import com.bunshik.admin.dto.AdminOrderSearchRequestDto;
 import com.bunshik.admin.dto.AdminOrderStatusRequestDto;
 import com.bunshik.admin.mappers.AdminHistoryMapper;
 import com.bunshik.admin.mappers.AdminOrderMapper;
+import com.bunshik.admin.security.CurrentAdminProvider;
 import com.bunshik.common.entity.AdminHistory;
 import com.bunshik.common.entity.Order;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,7 @@ public class AdminOrderService {
 
     private final AdminOrderMapper orderMapper;
     private final AdminHistoryMapper adminHistoryMapper;
-
+    private final CurrentAdminProvider currentAdminProvider;
     /*
      * 일반 상태 변경 API에서 허용되는 상태 순서
      *
@@ -318,7 +319,7 @@ public class AdminOrderService {
 
         AdminHistory history = new AdminHistory();
 
-        history.setAdminId(1);
+        history.setAdminId(currentAdminProvider.getAdminId());
         history.setTitle(title);
         history.setDescription(description);
 

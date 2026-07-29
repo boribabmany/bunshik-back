@@ -17,12 +17,12 @@
         order_status,
         created_at
         FROM orders
-        WHERE ORDER_STATUS NOT iN('결제대기', '취소')
+        WHERE order_status NOT IN ('결제대기', '취소')
         ORDER BY order_id DESC
 
     </select>
 
-    <!-- 주문 상세 조회 -->
+    <!-- 주문 한 건 조회 -->
     <select id="findById"
             parameterType="int"
             resultType="com.bunshik.common.entity.Order">
@@ -59,11 +59,15 @@
                 DATE(created_at) = #{date}
             </if>
 
-            <if test="orderType != null and orderType != '' and orderType != '전체'">
+            <if test="orderType != null
+                      and orderType != ''
+                      and orderType != '전체'">
                 AND order_type = #{orderType}
             </if>
 
-            <if test="orderStatus != null and orderStatus != '' and orderStatus != '전체'">
+            <if test="orderStatus != null
+                      and orderStatus != ''
+                      and orderStatus != '전체'">
                 AND order_status = #{orderStatus}
             </if>
 
@@ -80,6 +84,7 @@
         UPDATE orders
         SET order_status = #{orderStatus}
         WHERE order_id = #{orderId}
+        AND order_status NOT IN ('완료', '취소')
 
     </update>
 
@@ -90,9 +95,11 @@
         UPDATE orders
         SET order_status = '취소'
         WHERE order_id = #{orderId}
+        AND order_status NOT IN ('완료', '취소')
 
     </update>
-    <!-- 주문 메뉴 + 옵션 조회 -->
+
+    <!-- 주문 메뉴 및 옵션 조회 -->
     <select id="findItemsByOrderId"
             parameterType="int"
             resultType="com.bunshik.admin.dto.AdminOrderItemRowDto">
@@ -107,7 +114,7 @@
         o.option_price AS optionPrice
         FROM order_items oi
 
-        JOIN menus m
+        INNER JOIN menus m
         ON m.menu_id = oi.menu_id
 
         LEFT JOIN order_item_options oio
@@ -118,7 +125,10 @@
 
         WHERE oi.order_id = #{orderId}
 
-        ORDER BY oi.order_item_id ASC
+        ORDER BY
+        oi.order_item_id ASC,
+        o.option_id ASC
 
     </select>
+
 </mapper>

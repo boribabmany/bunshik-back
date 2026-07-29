@@ -3,6 +3,7 @@ package com.bunshik.admin.service;
 import com.bunshik.admin.dto.AdminMenuRequestDto;
 import com.bunshik.admin.mappers.AdminHistoryMapper;
 import com.bunshik.admin.mappers.AdminMenuMapper;
+import com.bunshik.admin.security.CurrentAdminProvider;
 import com.bunshik.common.entity.AdminHistory;
 import com.bunshik.common.entity.Menu;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class AdminMenuService {
 
     private final AdminMenuMapper menuMapper;
     private final AdminHistoryMapper adminHistoryMapper;
+    private final CurrentAdminProvider currentAdminProvider;
 
     // 실제 이미지 저장 경로
     private final String uploadPath = "uploads/menus/";
@@ -233,7 +235,7 @@ public class AdminMenuService {
 
         AdminHistory history = new AdminHistory();
 
-        history.setAdminId(1);
+        history.setAdminId(currentAdminProvider.getAdminId());
         history.setTitle(title);
         history.setDescription(description);
 

@@ -1,6 +1,8 @@
 package com.bunshik.common.config;
 
 import com.bunshik.admin.jwt.AdminJwtAuthenticationFilter;
+import com.bunshik.admin.security.RestAccessDeniedHandler;
+import com.bunshik.admin.security.RestAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +21,8 @@ import java.util.List;
 public class SecurityConfig {
 
     private final AdminJwtAuthenticationFilter adminJwtAuthenticationFilter;
+    private final RestAuthenticationEntryPoint authenticationEntryPoint;
+    private final RestAccessDeniedHandler accessDeniedHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
@@ -36,10 +40,15 @@ public class SecurityConfig {
                         )
                 )
 
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
+                )
+
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/admin/login").permitAll()
                         .requestMatchers("/images/**").permitAll()
-                        .requestMatchers("/api/admin/**").authenticated()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/**").permitAll()
                         .anyRequest().permitAll()
                 )

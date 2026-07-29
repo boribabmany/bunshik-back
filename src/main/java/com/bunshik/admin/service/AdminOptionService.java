@@ -3,6 +3,7 @@ package com.bunshik.admin.service;
 import com.bunshik.admin.dto.AdminOptionRequestDto;
 import com.bunshik.admin.mappers.AdminHistoryMapper;
 import com.bunshik.admin.mappers.AdminOptionMapper;
+import com.bunshik.admin.security.CurrentAdminProvider;
 import com.bunshik.common.entity.AdminHistory;
 import com.bunshik.common.entity.Option;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class AdminOptionService {
 
     private final AdminOptionMapper adminOptionMapper;
     private final AdminHistoryMapper adminHistoryMapper;
+    private final CurrentAdminProvider currentAdminProvider;
 
     private final String uploadPath = "uploads/options/";
 
@@ -212,7 +214,7 @@ public class AdminOptionService {
 
         AdminHistory history = new AdminHistory();
 
-        history.setAdminId(1);
+        history.setAdminId(currentAdminProvider.getAdminId());
         history.setTitle(title);
         history.setDescription(description);
 
