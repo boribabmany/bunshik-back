@@ -5,6 +5,7 @@ import com.bunshik.admin.dto.AdminOrderStatusRequestDto;
 import com.bunshik.admin.service.AdminOrderService;
 import com.bunshik.common.ApiResponse;
 import com.bunshik.common.entity.Order;
+import com.bunshik.admin.dto.AdminOrderDetailResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -69,6 +70,15 @@ public class AdminOrderController {
         return ApiResponse.success(
                 result,
                 "주문이 취소되었습니다."
+        );
+    }
+
+    @GetMapping("/{orderId}/detail")
+    public ApiResponse<AdminOrderDetailResponseDto> findDetailById(
+            @PathVariable Integer orderId
+    ) {
+        return ApiResponse.success(
+                adminOrderService.findDetailById(orderId)
         );
     }
 }

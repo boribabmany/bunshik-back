@@ -92,5 +92,33 @@
         WHERE order_id = #{orderId}
 
     </update>
+    <!-- 주문 메뉴 + 옵션 조회 -->
+    <select id="findItemsByOrderId"
+            parameterType="int"
+            resultType="com.bunshik.admin.dto.AdminOrderItemRowDto">
 
+        SELECT
+        oi.order_item_id AS orderItemId,
+        m.menu_name AS menuName,
+        oi.quantity AS quantity,
+        oi.price_at_order AS unitPrice,
+        o.option_id AS optionId,
+        o.option_name AS optionName,
+        o.option_price AS optionPrice
+        FROM order_items oi
+
+        JOIN menus m
+        ON m.menu_id = oi.menu_id
+
+        LEFT JOIN order_item_options oio
+        ON oio.order_item_id = oi.order_item_id
+
+        LEFT JOIN options o
+        ON o.option_id = oio.option_id
+
+        WHERE oi.order_id = #{orderId}
+
+        ORDER BY oi.order_item_id ASC
+
+    </select>
 </mapper>
