@@ -40,6 +40,10 @@ public class PaymentService {
             throw new IllegalArgumentException("이미 결제가 완료된 주문입니다.");
         }
 
+        if (!"결제대기".equals(order.getOrderStatus())) {
+            throw new IllegalStateException("결제 대기 중인 주문이 아닙니다: " + order.getOrderStatus());
+        }
+
         PaymentResult result = simulatePayment(paymentMethod);
 
         paymentMapper.insertPayment(

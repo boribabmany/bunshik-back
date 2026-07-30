@@ -1,7 +1,6 @@
 package com.bunshik.kiosk.controller;
 
 import com.bunshik.common.ApiResponse;
-import com.bunshik.common.entity.Menu;
 import com.bunshik.kiosk.dto.MenuResponseDto;
 import com.bunshik.kiosk.service.MenuService;
 import lombok.RequiredArgsConstructor;

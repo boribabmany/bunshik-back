@@ -2,7 +2,6 @@ package com.bunshik.kiosk.controller;
 
 import com.bunshik.common.ApiResponse;
 import com.bunshik.kiosk.dto.OptionResponseDto;
-import com.bunshik.kiosk.mapper.OptionMapper;
 import com.bunshik.kiosk.service.OptionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
