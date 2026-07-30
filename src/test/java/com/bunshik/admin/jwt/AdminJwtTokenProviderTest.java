@@ -29,4 +29,30 @@ class AdminJwtTokenProviderTest {
 
         assertThat(tokenProvider.validateToken("not-a-jwt")).isFalse();
     }
+
+    @Test
+    void expiredTokenIsInvalid() {
+        AdminJwtTokenProvider tokenProvider =
+                new AdminJwtTokenProvider(SECRET, -1);
+
+        String token = tokenProvider.createToken(7, "manager");
+
+        assertThat(tokenProvider.validateToken(token)).isFalse();
+    }
+
+    @Test
+    void tokenSignedWithDifferentSecretIsInvalid() {
+        AdminJwtTokenProvider tokenProvider =
+                new AdminJwtTokenProvider(SECRET, 60_000);
+        AdminJwtTokenProvider attackerTokenProvider =
+                new AdminJwtTokenProvider(
+                        "different-test-secret-key-must-be-at-least-32-bytes",
+                        60_000
+                );
+
+        String forgedToken =
+                attackerTokenProvider.createToken(7, "manager");
+
+        assertThat(tokenProvider.validateToken(forgedToken)).isFalse();
+    }
 }
