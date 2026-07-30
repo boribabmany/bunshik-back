@@ -28,6 +28,10 @@ public interface OrderMapper {
 
     Integer getOptionPrice(Integer optionId);
 
+    Boolean isMenuOrderable(Integer menuId);
+
+    Boolean isOptionOrderable(Integer optionId);
+
     // 취소용: 현재 주문 상태 조회
     String getOrderStatus(@Param("orderId") Integer orderId);
 

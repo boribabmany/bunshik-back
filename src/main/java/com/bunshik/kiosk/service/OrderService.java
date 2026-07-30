@@ -123,6 +123,10 @@ public class OrderService {
             if (price == null) {
                 throw new IllegalArgumentException("존재하지 않는 메뉴입니다: " + id);
             }
+            Boolean orderable = orderMapper.isMenuOrderable(id);
+            if (orderable == null || !orderable) {
+                throw new IllegalArgumentException("현재 주문할 수 없는 메뉴입니다: " + id);
+            }
             return price;
         });
     }
@@ -132,6 +136,10 @@ public class OrderService {
             Integer price = orderMapper.getOptionPrice(id);
             if (price == null) {
                 throw new IllegalArgumentException("존재하지 않는 옵션입니다: " + id);
+            }
+            Boolean orderable = orderMapper.isOptionOrderable(id);
+            if (orderable == null || !orderable) {
+                throw new IllegalArgumentException("현재 선택할 수 없는 옵션입니다: " + id);
             }
             return price;
         });
