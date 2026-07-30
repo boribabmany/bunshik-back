@@ -48,6 +48,16 @@
         SELECT option_price FROM options WHERE option_id = #{optionId}
     </select>
 
+    <select id="isMenuOrderable" resultType="boolean">
+        SELECT (is_visible = TRUE AND is_available = TRUE)
+        FROM menus WHERE menu_id = #{menuId}
+    </select>
+
+    <select id="isOptionOrderable" resultType="boolean">
+        SELECT (is_visible = TRUE AND option_is_available = TRUE)
+        FROM options WHERE option_id = #{optionId}
+    </select>
+
     <!-- 취소용: 현재 주문 상태 조회 -->
     <select id="getOrderStatus" resultType="String">
         SELECT order_status FROM orders WHERE order_id = #{orderId}
