@@ -22,4 +22,7 @@ public class OptionResponseDto {
 
     @JsonProperty("option_image")
     private String optionImage;
+
+    @JsonProperty("option_is_available")
+    private Boolean optionIsAvailable;
 }

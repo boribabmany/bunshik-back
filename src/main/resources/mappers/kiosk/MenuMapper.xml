@@ -19,6 +19,7 @@
             <result property="optionNameEn" column="option_name_en"/>
             <result property="optionPrice" column="option_price"/>
             <result property="optionImage" column="option_image"/>
+            <result property="optionIsAvailable" column="option_is_available"/>  <!-- 추가 -->
         </collection>
     </resultMap>
 
@@ -26,11 +27,10 @@
         SELECT
         m.menu_id, m.menu_name, m.menu_name_en, m.price, m.category, m.image_url, m.is_available,
         m.description, m.description_en, m.sort_order,
-        o.option_id, o.option_name, o.option_name_en, o.option_price, o.option_image
+        o.option_id, o.option_name, o.option_name_en, o.option_price, o.option_image, o.option_is_available
         FROM menus m
         LEFT JOIN menu_options mo ON m.menu_id = mo.menu_id
         LEFT JOIN options o ON mo.option_id = o.option_id
-        AND o.option_is_available = TRUE
         AND o.is_visible = TRUE
         WHERE m.is_visible = TRUE
         ORDER BY m.sort_order ASC
