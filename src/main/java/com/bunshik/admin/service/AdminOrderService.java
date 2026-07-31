@@ -5,6 +5,8 @@ import com.bunshik.admin.dto.AdminOrderItemResponseDto;
 import com.bunshik.admin.dto.AdminOrderItemRowDto;
 import com.bunshik.admin.dto.AdminOrderOptionResponseDto;
 import com.bunshik.admin.dto.AdminOrderSearchRequestDto;
+import com.bunshik.admin.dto.AdminOrderSetComponentResponseDto;
+import com.bunshik.admin.dto.AdminOrderSetComponentRowDto;
 import com.bunshik.admin.dto.AdminOrderStatusRequestDto;
 import com.bunshik.admin.mappers.AdminHistoryMapper;
 import com.bunshik.admin.mappers.AdminOrderMapper;
@@ -97,6 +99,7 @@ public class AdminOrderService {
                 item.setQuantity(row.getQuantity());
                 item.setUnitPrice(row.getUnitPrice());
                 item.setOptions(new ArrayList<>());
+                item.setComponents(new ArrayList<>());
 
                 itemMap.put(row.getOrderItemId(), item);
             }
@@ -113,6 +116,25 @@ public class AdminOrderService {
 
                 item.getOptions().add(option);
             }
+        }
+
+        List<AdminOrderSetComponentRowDto> componentRows =
+                orderMapper.findSetComponentsByOrderId(orderId);
+
+        for (AdminOrderSetComponentRowDto row : componentRows) {
+            AdminOrderItemResponseDto item =
+                    itemMap.get(row.getOrderItemId());
+
+            if (item == null) {
+                continue;
+            }
+
+            AdminOrderSetComponentResponseDto component =
+                    new AdminOrderSetComponentResponseDto();
+
+            component.setComponentMenuId(row.getComponentMenuId());
+            component.setComponentMenuName(row.getComponentMenuName());
+            item.getComponents().add(component);
         }
 
         // 최종 주문 상세 응답 생성

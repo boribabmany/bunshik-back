@@ -131,4 +131,26 @@
 
     </select>
 
+    <!-- 주문 당시 세트 구성품 스냅샷 조회 -->
+    <select id="findSetComponentsByOrderId"
+            parameterType="int"
+            resultType="com.bunshik.admin.dto.AdminOrderSetComponentRowDto">
+
+        SELECT
+        snapshot.order_item_id AS orderItemId,
+        snapshot.component_menu_id AS componentMenuId,
+        snapshot.component_menu_name AS componentMenuName
+        FROM order_item_set_components snapshot
+
+        INNER JOIN order_items oi
+        ON oi.order_item_id = snapshot.order_item_id
+
+        WHERE oi.order_id = #{orderId}
+
+        ORDER BY
+        snapshot.order_item_id ASC,
+        snapshot.component_menu_id ASC
+
+    </select>
+
 </mapper>

@@ -1,6 +1,7 @@
 package com.bunshik.admin.controller;
 
 import com.bunshik.admin.dto.AdminMenuRequestDto;
+import com.bunshik.admin.dto.SetMenuComponentsRequestDto;
 import com.bunshik.admin.service.AdminMenuService;
 import com.bunshik.common.ApiResponse;
 import com.bunshik.common.entity.Menu;
@@ -36,18 +37,43 @@ public class AdminMenuController {
         );
     }
 
+    @GetMapping("/{menuId}/components")
+    public ApiResponse<List<Menu>> findSetComponents(
+            @PathVariable Long menuId
+    ) {
+        return ApiResponse.success(
+                adminMenuService.findSetComponents(menuId)
+        );
+    }
+
+    @PutMapping("/{menuId}/components")
+    public ApiResponse<Integer> updateSetComponents(
+            @PathVariable Long menuId,
+            @RequestBody SetMenuComponentsRequestDto dto
+    ) {
+        int result = adminMenuService.updateSetComponents(
+                menuId,
+                dto.getComponentMenuIds()
+        );
+
+        return ApiResponse.success(
+                result,
+                "세트 구성이 저장되었습니다."
+        );
+    }
+
     // 메뉴 등록
     @PostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    public ApiResponse<Integer> insert(
+    public ApiResponse<Long> insert(
             @ModelAttribute AdminMenuRequestDto dto,
             @RequestParam("file") MultipartFile file
     ) {
-        int result = adminMenuService.insert(dto, file);
+        Long menuId = adminMenuService.insert(dto, file);
 
         return ApiResponse.success(
-                result,
+                menuId,
                 "메뉴가 등록되었습니다."
         );
     }

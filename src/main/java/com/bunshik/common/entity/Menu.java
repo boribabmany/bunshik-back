@@ -18,6 +18,7 @@ public class Menu {
     private String description;
     private String descriptionEn;
     private Boolean isAvailable;
+    private Boolean effectiveAvailable;
     private Boolean isVisible;      // 추가
     private String soldOutReason;
     private LocalDateTime createdAt;

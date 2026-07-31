@@ -44,6 +44,7 @@
         WHEN EXISTS (
         SELECT 1 FROM menu_set ms
         JOIN menus cm ON ms.component_menu_id = cm.menu_id
+<<<<<<< HEAD
         WHERE ms.set_menu_id = m.menu_id AND ms.select_group IS NULL
         AND (cm.is_available = FALSE OR cm.is_visible = FALSE)
         ) THEN FALSE
@@ -57,6 +58,10 @@
         GROUP BY ms.select_group
         ) grp
         WHERE grp.avail_cnt = 0
+=======
+        WHERE ms.set_menu_id = m.menu_id
+        AND (cm.is_available = FALSE OR cm.is_visible = FALSE)
+>>>>>>> f8fc5452f17dad23d3d198d0c53bea21974039e0
         ) THEN FALSE
         ELSE TRUE
         END AS is_available,

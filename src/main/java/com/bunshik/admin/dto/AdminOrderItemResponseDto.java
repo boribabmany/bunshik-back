@@ -15,4 +15,5 @@ public class AdminOrderItemResponseDto {
     private Integer unitPrice;
 
     private List<AdminOrderOptionResponseDto> options;
+    private List<AdminOrderSetComponentResponseDto> components;
 }
