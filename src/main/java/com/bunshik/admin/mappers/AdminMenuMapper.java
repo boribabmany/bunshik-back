@@ -1,6 +1,7 @@
 package com.bunshik.admin.mappers;
 
 import com.bunshik.common.entity.Menu;
+import com.bunshik.admin.dto.SetMenuComponentDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -13,13 +14,16 @@ public interface AdminMenuMapper {
 
     Menu findById(Long menuId);
 
-    List<Menu> findSetComponents(Long menuId);
+    List<SetMenuComponentDto> findSetComponents(Long menuId);
 
     int deleteSetComponents(Long menuId);
 
-    int insertSetComponents(
+    int insertSetComponent(
             @Param("setMenuId") Long setMenuId,
-            @Param("componentMenuIds") List<Long> componentMenuIds
+            @Param("componentMenuId") Long componentMenuId,
+            @Param("selectGroup") String selectGroup,
+            @Param("groupMaxSelect") Integer groupMaxSelect,
+            @Param("extraPrice") Integer extraPrice
     );
 
     int insert(Menu menu);

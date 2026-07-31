@@ -83,22 +83,18 @@
     <!-- 세트 구성 메뉴 조회 -->
     <select id="findSetComponents"
             parameterType="long"
-            resultType="com.bunshik.common.entity.Menu">
+            resultType="com.bunshik.admin.dto.SetMenuComponentDto">
 
         SELECT
-        component.menu_id,
-        component.menu_name,
-        component.menu_name_en,
-        component.price,
+        component.menu_id AS componentMenuId,
+        component.menu_name AS menuName,
+        component.menu_name_en AS menuNameEn,
         component.category,
-        component.image_url,
-        component.description,
-        component.description_en,
-        component.is_available,
-        component.is_visible,
-        component.sold_out_reason,
-        component.created_at,
-        component.updated_at
+        component.is_available AS isAvailable,
+        component.is_visible AS isVisible,
+        ms.select_group AS selectGroup,
+        ms.group_max_select AS groupMaxSelect,
+        COALESCE(ms.extra_price, 0) AS extraPrice
         FROM menu_set ms
         JOIN menus component
           ON component.menu_id = ms.component_menu_id
@@ -114,14 +110,14 @@
         WHERE set_menu_id = #{menuId}
     </delete>
 
-    <insert id="insertSetComponents">
-        INSERT INTO menu_set (set_menu_id, component_menu_id)
-        VALUES
-        <foreach collection="componentMenuIds"
-                 item="componentMenuId"
-                 separator=",">
-            (#{setMenuId}, #{componentMenuId})
-        </foreach>
+    <insert id="insertSetComponent">
+        INSERT INTO menu_set (
+            set_menu_id, component_menu_id, select_group, group_max_select, extra_price
+        )
+        VALUES (
+            #{setMenuId}, #{componentMenuId}, NULLIF(#{selectGroup}, ''),
+            #{groupMaxSelect}, COALESCE(#{extraPrice}, 0)
+        )
     </insert>
 
     <!-- 등록 -->

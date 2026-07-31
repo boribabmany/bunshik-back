@@ -16,6 +16,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -53,7 +54,8 @@ class AdminMenuServiceTest {
 
         assertThat(menuId).isEqualTo(10L);
         verify(menuMapper).deleteSetComponents(10L);
-        verify(menuMapper).insertSetComponents(10L, List.of(1L, 2L));
+        verify(menuMapper).insertSetComponent(10L, 1L, null, null, 0);
+        verify(menuMapper).insertSetComponent(10L, 2L, null, null, 0);
     }
 
     @Test
@@ -97,7 +99,8 @@ class AdminMenuServiceTest {
 
         assertThat(count).isEqualTo(2);
         verify(menuMapper).deleteSetComponents(10L);
-        verify(menuMapper).insertSetComponents(10L, List.of(1L, 2L));
+        verify(menuMapper).insertSetComponent(10L, 1L, null, null, 0);
+        verify(menuMapper).insertSetComponent(10L, 2L, null, null, 0);
     }
 
     @Test
@@ -112,7 +115,9 @@ class AdminMenuServiceTest {
 
         assertThat(result).isEqualTo(1);
         verify(menuMapper).deleteSetComponents(10L);
-        verify(menuMapper, never()).insertSetComponents(eq(10L), any());
+        verify(menuMapper, never()).insertSetComponent(
+                eq(10L), anyLong(), any(), any(), any()
+        );
     }
 
     @Test

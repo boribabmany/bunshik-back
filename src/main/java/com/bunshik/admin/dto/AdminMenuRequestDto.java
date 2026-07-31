@@ -20,4 +20,5 @@ public class AdminMenuRequestDto {
     private Boolean isAvailable;
     private String soldOutReason;
     private List<Long> componentMenuIds = new ArrayList<>();
+    private List<SetMenuComponentDto> componentSettings = new ArrayList<>();
 }

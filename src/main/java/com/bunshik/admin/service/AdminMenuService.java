@@ -1,6 +1,7 @@
 package com.bunshik.admin.service;
 
 import com.bunshik.admin.dto.AdminMenuRequestDto;
+import com.bunshik.admin.dto.SetMenuComponentDto;
 import com.bunshik.admin.mappers.AdminHistoryMapper;
 import com.bunshik.admin.mappers.AdminMenuMapper;
 import com.bunshik.admin.security.CurrentAdminProvider;
@@ -15,8 +16,10 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.List;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +46,7 @@ public class AdminMenuService {
         return menuMapper.findById(menuId);
     }
 
-    public List<Menu> findSetComponents(Long menuId) {
+    public List<SetMenuComponentDto> findSetComponents(Long menuId) {
         requireSetMenu(menuId);
         return menuMapper.findSetComponents(menuId);
     }
@@ -55,7 +58,7 @@ public class AdminMenuService {
                 menuId,
                 componentMenuIds
         );
-        replaceSetComponents(menuId, uniqueComponentIds);
+        replaceSetComponents(menuId, fixedSettings(uniqueComponentIds));
 
         saveHistory(
                 "세트 구성 변경",
@@ -115,14 +118,79 @@ public class AdminMenuService {
         return uniqueComponentIds;
     }
 
+    private List<SetMenuComponentDto> fixedSettings(List<Long> componentMenuIds) {
+        return componentMenuIds.stream().map(componentMenuId -> {
+            SetMenuComponentDto setting = new SetMenuComponentDto();
+            setting.setComponentMenuId(componentMenuId);
+            setting.setExtraPrice(0);
+            return setting;
+        }).toList();
+    }
+
+    private List<SetMenuComponentDto> validateComponentSettings(
+            List<Long> componentMenuIds,
+            List<SetMenuComponentDto> settings
+    ) {
+        if (settings == null || settings.isEmpty()) {
+            return fixedSettings(componentMenuIds);
+        }
+
+        Set<Long> settingIds = settings.stream()
+                .map(SetMenuComponentDto::getComponentMenuId)
+                .collect(Collectors.toSet());
+        if (settingIds.size() != settings.size()
+                || !settingIds.equals(new LinkedHashSet<>(componentMenuIds))) {
+            throw new IllegalArgumentException("선택한 모든 구성 메뉴의 설정이 필요합니다.");
+        }
+
+        for (SetMenuComponentDto setting : settings) {
+            if (!componentMenuIds.contains(setting.getComponentMenuId())) {
+                throw new IllegalArgumentException("선택하지 않은 메뉴의 세트 설정이 포함되어 있습니다.");
+            }
+            String group = setting.getSelectGroup();
+            if (group == null || group.isBlank()) {
+                setting.setSelectGroup(null);
+                setting.setGroupMaxSelect(null);
+            } else if (setting.getGroupMaxSelect() == null || setting.getGroupMaxSelect() < 1) {
+                throw new IllegalArgumentException("선택 그룹의 최대 선택 수는 1 이상이어야 합니다.");
+            }
+            if (setting.getExtraPrice() == null) {
+                setting.setExtraPrice(0);
+            }
+        }
+
+        Map<String, List<SetMenuComponentDto>> groups = settings.stream()
+                .filter(setting -> setting.getSelectGroup() != null)
+                .collect(Collectors.groupingBy(SetMenuComponentDto::getSelectGroup));
+        for (Map.Entry<String, List<SetMenuComponentDto>> entry : groups.entrySet()) {
+            long maxSelectCount = entry.getValue().stream()
+                    .map(SetMenuComponentDto::getGroupMaxSelect)
+                    .distinct()
+                    .count();
+            int maxSelect = entry.getValue().get(0).getGroupMaxSelect();
+            if (maxSelectCount != 1 || maxSelect > entry.getValue().size()) {
+                throw new IllegalArgumentException(
+                        entry.getKey() + " 그룹의 최대 선택 수 설정을 확인해주세요."
+                );
+            }
+        }
+        return settings;
+    }
+
     private void replaceSetComponents(
             Long setMenuId,
-            List<Long> componentMenuIds
+            List<SetMenuComponentDto> componentSettings
     ) {
         menuMapper.deleteSetComponents(setMenuId);
 
-        if (!componentMenuIds.isEmpty()) {
-            menuMapper.insertSetComponents(setMenuId, componentMenuIds);
+        for (SetMenuComponentDto setting : componentSettings) {
+            menuMapper.insertSetComponent(
+                    setMenuId,
+                    setting.getComponentMenuId(),
+                    setting.getSelectGroup(),
+                    setting.getGroupMaxSelect(),
+                    setting.getExtraPrice()
+            );
         }
     }
 
@@ -139,6 +207,8 @@ public class AdminMenuService {
         List<Long> componentMenuIds = "세트".equals(dto.getCategory())
                 ? validateComponentMenuIds(null, dto.getComponentMenuIds())
                 : List.of();
+        List<SetMenuComponentDto> componentSettings =
+                validateComponentSettings(componentMenuIds, dto.getComponentSettings());
 
         if (file != null && !file.isEmpty()) {
             String imageUrl = saveImage(file);
@@ -175,7 +245,7 @@ public class AdminMenuService {
         }
 
         if ("세트".equals(dto.getCategory())) {
-            replaceSetComponents(menu.getMenuId(), componentMenuIds);
+            replaceSetComponents(menu.getMenuId(), componentSettings);
         }
 
         return menu.getMenuId();
@@ -192,6 +262,8 @@ public class AdminMenuService {
         List<Long> componentMenuIds = "세트".equals(dto.getCategory())
                 ? validateComponentMenuIds(menuId, dto.getComponentMenuIds())
                 : List.of();
+        List<SetMenuComponentDto> componentSettings =
+                validateComponentSettings(componentMenuIds, dto.getComponentSettings());
 
         Menu oldMenu = menuMapper.findById(menuId);
 
@@ -229,7 +301,7 @@ public class AdminMenuService {
         int result = menuMapper.update(menu);
 
         if (result > 0) {
-            replaceSetComponents(menuId, componentMenuIds);
+            replaceSetComponents(menuId, componentSettings);
 
             // 새 이미지로 수정한 경우에만 기존 이미지 파일 삭제
             if (imageChanged) {

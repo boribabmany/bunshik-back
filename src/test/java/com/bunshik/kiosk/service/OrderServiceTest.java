@@ -3,6 +3,7 @@ package com.bunshik.kiosk.service;
 import com.bunshik.kiosk.dto.OrderCreateRequestDto;
 import com.bunshik.kiosk.dto.OrderItemDto;
 import com.bunshik.kiosk.mapper.OrderMapper;
+import com.bunshik.kiosk.mapper.SetGroupInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -38,9 +39,28 @@ class OrderServiceTest {
         when(orderMapper.isMenuOrderable(10)).thenReturn(true);
         when(orderMapper.getLastOrderId()).thenReturn(100);
         when(orderMapper.getLastOrderItemId()).thenReturn(200);
+        when(orderMapper.getSetComponentInfo(10)).thenReturn(
+                List.of(component(1, "떡볶이"))
+        );
 
         orderService.createOrder(request);
 
-        verify(orderMapper).insertOrderItemSetComponents(200, 10);
+        verify(orderMapper).insertOrderItemSetComponent(
+                200,
+                1,
+                "떡볶이"
+        );
+    }
+
+    private SetGroupInfo component(
+            Integer componentMenuId,
+            String componentMenuName
+    ) {
+        SetGroupInfo component = new SetGroupInfo();
+        component.setComponentMenuId(componentMenuId);
+        component.setComponentMenuName(componentMenuName);
+        component.setExtraPrice(0);
+        component.setIsAvailable(true);
+        return component;
     }
 }

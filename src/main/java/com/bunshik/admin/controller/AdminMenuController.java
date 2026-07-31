@@ -2,6 +2,7 @@ package com.bunshik.admin.controller;
 
 import com.bunshik.admin.dto.AdminMenuRequestDto;
 import com.bunshik.admin.dto.SetMenuComponentsRequestDto;
+import com.bunshik.admin.dto.SetMenuComponentDto;
 import com.bunshik.admin.service.AdminMenuService;
 import com.bunshik.common.ApiResponse;
 import com.bunshik.common.entity.Menu;
@@ -38,7 +39,7 @@ public class AdminMenuController {
     }
 
     @GetMapping("/{menuId}/components")
-    public ApiResponse<List<Menu>> findSetComponents(
+    public ApiResponse<List<SetMenuComponentDto>> findSetComponents(
             @PathVariable Long menuId
     ) {
         return ApiResponse.success(
