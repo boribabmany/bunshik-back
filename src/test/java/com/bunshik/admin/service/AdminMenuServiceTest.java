@@ -69,6 +69,17 @@ class AdminMenuServiceTest {
     }
 
     @Test
+    void insertSetMenuRejectsEmptyComponents() {
+        AdminMenuRequestDto request = request("세트", List.of());
+
+        assertThatThrownBy(() -> adminMenuService.insert(request, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("세트 메뉴는 구성 메뉴를 한 개 이상 선택해야 합니다.");
+
+        verify(menuMapper, never()).insert(any(Menu.class));
+    }
+
+    @Test
     void updateSetComponentsRemovesDuplicateIds() {
         Menu setMenu = menu(10L, "세트");
         setMenu.setMenuName("떡순튀 세트");
