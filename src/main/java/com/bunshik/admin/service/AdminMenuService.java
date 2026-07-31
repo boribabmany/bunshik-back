@@ -86,6 +86,13 @@ public class AdminMenuService {
         List<Long> uniqueComponentIds = componentMenuIds == null
                 ? List.of()
                 : new LinkedHashSet<>(componentMenuIds).stream().toList();
+
+        if (uniqueComponentIds.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "세트 메뉴는 구성 메뉴를 한 개 이상 선택해야 합니다."
+            );
+        }
+
         List<Menu> menus = menuMapper.findAll();
 
         for (Long componentMenuId : uniqueComponentIds) {
