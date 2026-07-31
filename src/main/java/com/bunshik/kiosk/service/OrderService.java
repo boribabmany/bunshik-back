@@ -97,11 +97,16 @@ public class OrderService {
     }
 
     // 세트 그룹 선택 검증(그룹당 정확히 group_max_select개) + 선택된 후보들의 추가금액 합산
+    // (고정형 세트/일반 메뉴는 select_group이 없으므로 추가금액 0, 검증 없이 통과)
     private int validateAndCalculateSetComponents(Integer setMenuId, List<Integer> componentMenuIds) {
 
-        List<SetGroupInfo> groupInfos = orderMapper.getSetGroupInfo(setMenuId);
+        List<SetGroupInfo> allComponents = orderMapper.getSetComponentInfo(setMenuId);
 
-        if (groupInfos.isEmpty()) {
+        List<SetGroupInfo> selectableGroups = allComponents.stream()
+                .filter(c -> c.getSelectGroup() != null)
+                .toList();
+
+        if (selectableGroups.isEmpty()) {
             // 선택형 그룹이 없는 메뉴(일반 메뉴, 또는 떡순튀세트 같은 고정형 세트)
             return 0;
         }
@@ -109,7 +114,7 @@ public class OrderService {
         List<Integer> selectedIds = componentMenuIds != null ? componentMenuIds : List.of();
 
         // 그룹별로 후보 정리 (예: "김밥선택" -> [야채김밥, 참치김밥], "음료선택" -> [콜라, 사이다])
-        Map<String, List<SetGroupInfo>> byGroup = groupInfos.stream()
+        Map<String, List<SetGroupInfo>> byGroup = selectableGroups.stream()
                 .collect(Collectors.groupingBy(SetGroupInfo::getSelectGroup));
 
         int extraPriceSum = 0;
@@ -179,28 +184,26 @@ public class OrderService {
 
             Integer orderItemId = orderMapper.getLastOrderItemId();
 
-            orderMapper.insertOrderItemSetComponents(
-                    orderItemId,
-                    item.getMenuId()
-            );
-
             if (item.getOptionIds() != null) {
                 for (Integer optionId : item.getOptionIds()) {
                     orderMapper.insertOrderItemOption(orderItemId, optionId);
                 }
             }
 
-            // 세트에서 고른 구성 메뉴 기록
-            if (item.getComponentMenuIds() != null && !item.getComponentMenuIds().isEmpty()) {
+            // 세트 구성 메뉴 기록 (고정형: 전체 자동 포함 / 선택형: 손님이 고른 것만)
+            List<SetGroupInfo> allComponents = orderMapper.getSetComponentInfo(item.getMenuId());
 
-                List<SetGroupInfo> groupInfos = orderMapper.getSetGroupInfo(item.getMenuId());
+            if (!allComponents.isEmpty()) {
 
-                Map<Integer, String> nameById = groupInfos.stream()
+                Map<Integer, String> nameById = allComponents.stream()
                         .collect(Collectors.toMap(SetGroupInfo::getComponentMenuId, SetGroupInfo::getComponentMenuName));
 
-                for (Integer componentMenuId : item.getComponentMenuIds()) {
-                    String componentMenuName = nameById.get(componentMenuId);
-                    orderMapper.insertOrderItemSetComponent(orderItemId, componentMenuId, componentMenuName);
+                List<Integer> idsToSave = (item.getComponentMenuIds() != null && !item.getComponentMenuIds().isEmpty())
+                        ? item.getComponentMenuIds()  // 그룹 선택형: 손님이 고른 것만
+                        : allComponents.stream().map(SetGroupInfo::getComponentMenuId).toList(); // 고정형: 전체
+
+                for (Integer componentMenuId : idsToSave) {
+                    orderMapper.insertOrderItemSetComponent(orderItemId, componentMenuId, nameById.get(componentMenuId));
                 }
             }
         }

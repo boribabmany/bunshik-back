@@ -23,15 +23,11 @@ public interface OrderMapper {
 
     Integer getLastOrderItemId();
 
-    int insertOrderItemSetComponents(
-            @Param("orderItemId") Integer orderItemId,
-            @Param("menuId") Integer menuId
-    );
-
     void insertOrderItemOption(@Param("orderItemId") Integer orderItemId,
                                @Param("optionId") Integer optionId);
 
-    List<SetGroupInfo> getSetGroupInfo(@Param("setMenuId") Integer setMenuId);
+    // 세트(고정형/선택형 공통) 구성 후보 전체 조회
+    List<SetGroupInfo> getSetComponentInfo(@Param("setMenuId") Integer setMenuId);
 
     void insertOrderItemSetComponent(@Param("orderItemId") Integer orderItemId,
                                      @Param("componentMenuId") Integer componentMenuId,
