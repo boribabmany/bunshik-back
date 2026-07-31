@@ -33,4 +33,7 @@ public class MenuResponseDto {
     private Boolean isAvailable;
 
     private List<OptionResponseDto> options;
+
+    @JsonProperty("set_components")
+    private List<SetComponentResponseDto> setComponents;
 }

@@ -3,6 +3,8 @@ package com.bunshik.kiosk.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 @Mapper
 public interface OrderMapper {
 
@@ -23,6 +25,12 @@ public interface OrderMapper {
 
     void insertOrderItemOption(@Param("orderItemId") Integer orderItemId,
                                @Param("optionId") Integer optionId);
+
+    List<SetGroupInfo> getSetGroupInfo(@Param("setMenuId") Integer setMenuId);
+
+    void insertOrderItemSetComponent(@Param("orderItemId") Integer orderItemId,
+                                     @Param("componentMenuId") Integer componentMenuId,
+                                     @Param("componentMenuName") String componentMenuName);
 
     Integer getMenuPrice(Integer menuId);
 

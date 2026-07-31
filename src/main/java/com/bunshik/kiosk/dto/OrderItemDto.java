@@ -24,4 +24,7 @@ public class OrderItemDto {
     @Size(max = 2, message = "옵션은 최대 2개까지 선택할 수 있습니다.")
     @JsonProperty("option_ids")
     private List<Integer> optionIds;
+
+    @JsonProperty("component_menu_ids")
+    private List<Integer> componentMenuIds;
 }

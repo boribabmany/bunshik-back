@@ -50,10 +50,20 @@
 
     <select id="isMenuOrderable" resultType="boolean">
         SELECT
-        (is_visible = TRUE AND is_available = TRUE AND NOT EXISTS (
-        SELECT 1 FROM menu_set ms
-        JOIN menus cm ON ms.component_menu_id = cm.menu_id
-        WHERE ms.set_menu_id = #{menuId} AND cm.is_available = FALSE
+        (is_visible = TRUE AND is_available = TRUE
+        AND NOT EXISTS (
+        SELECT 1 FROM menu_set ms JOIN menus cm ON ms.component_menu_id = cm.menu_id
+        WHERE ms.set_menu_id = #{menuId} AND ms.select_group IS NULL
+        AND (cm.is_available = FALSE OR cm.is_visible = FALSE)
+        )
+        AND NOT EXISTS (
+        SELECT 1 FROM (
+        SELECT ms.select_group,
+        SUM(CASE WHEN cm.is_available = TRUE AND cm.is_visible = TRUE THEN 1 ELSE 0 END) AS avail_cnt
+        FROM menu_set ms JOIN menus cm ON ms.component_menu_id = cm.menu_id
+        WHERE ms.set_menu_id = #{menuId} AND ms.select_group IS NOT NULL
+        GROUP BY ms.select_group
+        ) grp WHERE grp.avail_cnt = 0
         ))
         FROM menus
         WHERE menu_id = #{menuId}
@@ -75,5 +85,21 @@
         SET order_status = '취소'
         WHERE order_id = #{orderId}
     </update>
+
+    <select id="getSetGroupInfo" resultType="com.bunshik.kiosk.mapper.SetGroupInfo">
+        SELECT ms.select_group AS selectGroup, ms.component_menu_id AS componentMenuId,
+        cm.menu_name AS componentMenuName,
+        ms.group_max_select AS groupMaxSelect, ms.extra_price AS extraPrice,
+        (cm.is_available = TRUE AND cm.is_visible = TRUE) AS isAvailable
+        FROM menu_set ms
+        JOIN menus cm ON ms.component_menu_id = cm.menu_id
+        WHERE ms.set_menu_id = #{setMenuId} AND ms.select_group IS NOT NULL
+    </select>
+
+    <insert id="insertOrderItemSetComponent">
+        INSERT INTO order_item_set_components (order_item_id, component_menu_id, component_menu_name)
+        VALUES (#{orderItemId}, #{componentMenuId},
+        (SELECT menu_name FROM menus WHERE menu_id = #{componentMenuId}))
+    </insert>
 
 </mapper>

@@ -13,13 +13,26 @@
         <result property="imageUrl" column="image_url"/>
         <result property="isAvailable" column="is_available"/>
 
-        <collection property="options" ofType="com.bunshik.kiosk.dto.OptionResponseDto" javaType="java.util.List">
+        <collection property="options" ofType="com.bunshik.kiosk.dto.OptionResponseDto"
+                    javaType="java.util.List" notNullColumn="option_id">
             <id property="optionId" column="option_id"/>
             <result property="optionName" column="option_name"/>
             <result property="optionNameEn" column="option_name_en"/>
             <result property="optionPrice" column="option_price"/>
             <result property="optionImage" column="option_image"/>
             <result property="optionIsAvailable" column="option_is_available"/>
+        </collection>
+
+        <collection property="setComponents" ofType="com.bunshik.kiosk.dto.SetComponentResponseDto"
+                    javaType="java.util.List" notNullColumn="component_menu_id">
+            <id property="componentMenuId" column="component_menu_id"/>
+            <result property="componentMenuName" column="component_menu_name"/>
+            <result property="componentMenuNameEn" column="component_menu_name_en"/>
+            <result property="componentImageUrl" column="component_image_url"/>
+            <result property="extraPrice" column="extra_price"/>
+            <result property="isAvailable" column="component_is_available"/>
+            <result property="selectGroup" column="select_group"/>
+            <result property="groupMaxSelect" column="group_max_select"/>
         </collection>
     </resultMap>
 
@@ -31,16 +44,33 @@
         WHEN EXISTS (
         SELECT 1 FROM menu_set ms
         JOIN menus cm ON ms.component_menu_id = cm.menu_id
-        WHERE ms.set_menu_id = m.menu_id AND cm.is_available = FALSE
+        WHERE ms.set_menu_id = m.menu_id AND ms.select_group IS NULL
+        AND (cm.is_available = FALSE OR cm.is_visible = FALSE)
+        ) THEN FALSE
+        WHEN EXISTS (
+        SELECT 1 FROM (
+        SELECT ms.select_group,
+        SUM(CASE WHEN cm.is_available = TRUE AND cm.is_visible = TRUE THEN 1 ELSE 0 END) AS avail_cnt
+        FROM menu_set ms
+        JOIN menus cm ON ms.component_menu_id = cm.menu_id
+        WHERE ms.set_menu_id = m.menu_id AND ms.select_group IS NOT NULL
+        GROUP BY ms.select_group
+        ) grp
+        WHERE grp.avail_cnt = 0
         ) THEN FALSE
         ELSE TRUE
         END AS is_available,
         m.description, m.description_en, m.sort_order,
-        o.option_id, o.option_name, o.option_name_en, o.option_price, o.option_image, o.option_is_available
+        o.option_id, o.option_name, o.option_name_en, o.option_price, o.option_image, o.option_is_available,
+        cm2.menu_id AS component_menu_id, cm2.menu_name AS component_menu_name,
+        cm2.menu_name_en AS component_menu_name_en, cm2.image_url AS component_image_url,
+        ms2.extra_price, cm2.is_available AS component_is_available,
+        ms2.select_group, ms2.group_max_select
         FROM menus m
         LEFT JOIN menu_options mo ON m.menu_id = mo.menu_id
-        LEFT JOIN options o ON mo.option_id = o.option_id
-        AND o.is_visible = TRUE
+        LEFT JOIN options o ON mo.option_id = o.option_id AND o.is_visible = TRUE
+        LEFT JOIN menu_set ms2 ON m.menu_id = ms2.set_menu_id AND ms2.select_group IS NOT NULL
+        LEFT JOIN menus cm2 ON ms2.component_menu_id = cm2.menu_id AND cm2.is_visible = TRUE
         WHERE m.is_visible = TRUE
         ORDER BY m.sort_order ASC
     </select>
