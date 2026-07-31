@@ -86,11 +86,8 @@
         WHERE order_id = #{orderId}
     </update>
 
-<<<<<<< HEAD
     <!-- 세트(고정형/선택형 공통) 구성 후보 전체 조회 -->
     <select id="getSetComponentInfo" resultType="com.bunshik.kiosk.mapper.SetGroupInfo">
-=======
->>>>>>> bff957e647d0cd0e443534b120b5c8bb549837dd
         SELECT ms.select_group AS selectGroup, ms.component_menu_id AS componentMenuId,
         cm.menu_name AS componentMenuName,
         ms.group_max_select AS groupMaxSelect, ms.extra_price AS extraPrice,
