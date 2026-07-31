@@ -33,6 +33,23 @@
         SELECT LAST_INSERT_ID()
     </select>
 
+    <insert id="insertOrderItemSetComponents">
+        INSERT INTO order_item_set_components
+        (
+            order_item_id,
+            component_menu_id,
+            component_menu_name
+        )
+        SELECT
+            #{orderItemId},
+            component.menu_id,
+            component.menu_name
+        FROM menu_set ms
+        JOIN menus component
+          ON component.menu_id = ms.component_menu_id
+        WHERE ms.set_menu_id = #{menuId}
+    </insert>
+
     <insert id="insertOrderItemOption">
         INSERT INTO order_item_options
         (order_item_id, option_id)

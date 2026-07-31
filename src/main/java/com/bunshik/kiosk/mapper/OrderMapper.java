@@ -21,6 +21,11 @@ public interface OrderMapper {
 
     Integer getLastOrderItemId();
 
+    int insertOrderItemSetComponents(
+            @Param("orderItemId") Integer orderItemId,
+            @Param("menuId") Integer menuId
+    );
+
     void insertOrderItemOption(@Param("orderItemId") Integer orderItemId,
                                @Param("optionId") Integer optionId);
 

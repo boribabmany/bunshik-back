@@ -109,6 +109,11 @@ public class OrderService {
 
             Integer orderItemId = orderMapper.getLastOrderItemId();
 
+            orderMapper.insertOrderItemSetComponents(
+                    orderItemId,
+                    item.getMenuId()
+            );
+
             if (item.getOptionIds() != null) {
                 for (Integer optionId : item.getOptionIds()) {
                     orderMapper.insertOrderItemOption(orderItemId, optionId);

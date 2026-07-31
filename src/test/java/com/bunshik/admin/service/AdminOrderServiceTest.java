@@ -3,6 +3,7 @@ package com.bunshik.admin.service;
 import com.bunshik.admin.dto.AdminOrderDetailResponseDto;
 import com.bunshik.admin.dto.AdminOrderItemRowDto;
 import com.bunshik.admin.dto.AdminOrderStatusRequestDto;
+import com.bunshik.admin.dto.AdminOrderSetComponentRowDto;
 import com.bunshik.admin.mappers.AdminHistoryMapper;
 import com.bunshik.admin.mappers.AdminOrderMapper;
 import com.bunshik.admin.security.CurrentAdminProvider;
@@ -67,6 +68,10 @@ class AdminOrderServiceTest {
                 row(10, "떡볶이", 1, 4000, 102, "계란", 500),
                 row(11, "순대", 2, 3000, null, null, null)
         ));
+        when(orderMapper.findSetComponentsByOrderId(1)).thenReturn(List.of(
+                componentRow(10, 201, "떡볶이"),
+                componentRow(10, 202, "순대")
+        ));
 
         AdminOrderDetailResponseDto detail =
                 adminOrderService.findDetailById(1);
@@ -79,6 +84,9 @@ class AdminOrderServiceTest {
                 .containsExactly("치즈", "계란");
         assertThat(detail.getItems().get(1).getMenuName()).isEqualTo("순대");
         assertThat(detail.getItems().get(1).getOptions()).isEmpty();
+        assertThat(detail.getItems().get(0).getComponents())
+                .extracting("componentMenuName")
+                .containsExactly("떡볶이", "순대");
     }
 
     @Test
@@ -194,6 +202,19 @@ class AdminOrderServiceTest {
         row.setOptionId(optionId);
         row.setOptionName(optionName);
         row.setOptionPrice(optionPrice);
+        return row;
+    }
+
+    private AdminOrderSetComponentRowDto componentRow(
+            Integer orderItemId,
+            Integer componentMenuId,
+            String componentMenuName
+    ) {
+        AdminOrderSetComponentRowDto row =
+                new AdminOrderSetComponentRowDto();
+        row.setOrderItemId(orderItemId);
+        row.setComponentMenuId(componentMenuId);
+        row.setComponentMenuName(componentMenuName);
         return row;
     }
 }

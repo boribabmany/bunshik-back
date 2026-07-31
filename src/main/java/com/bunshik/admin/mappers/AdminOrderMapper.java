@@ -2,6 +2,7 @@ package com.bunshik.admin.mappers;
 
 import com.bunshik.admin.dto.AdminOrderItemRowDto;
 import com.bunshik.admin.dto.AdminOrderSearchRequestDto;
+import com.bunshik.admin.dto.AdminOrderSetComponentRowDto;
 import com.bunshik.common.entity.Order;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -27,4 +28,8 @@ public interface AdminOrderMapper {
 
     // 주문 메뉴 + 옵션 조회
     List<AdminOrderItemRowDto> findItemsByOrderId(Integer orderId);
+
+    List<AdminOrderSetComponentRowDto> findSetComponentsByOrderId(
+            Integer orderId
+    );
 }
