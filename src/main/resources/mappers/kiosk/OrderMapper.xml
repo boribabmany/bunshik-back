@@ -49,8 +49,14 @@
     </select>
 
     <select id="isMenuOrderable" resultType="boolean">
-        SELECT (is_visible = TRUE AND is_available = TRUE)
-        FROM menus WHERE menu_id = #{menuId}
+        SELECT
+        (is_visible = TRUE AND is_available = TRUE AND NOT EXISTS (
+        SELECT 1 FROM menu_set ms
+        JOIN menus cm ON ms.component_menu_id = cm.menu_id
+        WHERE ms.set_menu_id = #{menuId} AND cm.is_available = FALSE
+        ))
+        FROM menus
+        WHERE menu_id = #{menuId}
     </select>
 
     <select id="isOptionOrderable" resultType="boolean">
