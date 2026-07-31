@@ -3,6 +3,9 @@ package com.bunshik.admin.dto;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
 public class AdminMenuRequestDto {
@@ -16,4 +19,5 @@ public class AdminMenuRequestDto {
     private String descriptionEn;
     private Boolean isAvailable;
     private String soldOutReason;
+    private List<Long> componentMenuIds = new ArrayList<>();
 }

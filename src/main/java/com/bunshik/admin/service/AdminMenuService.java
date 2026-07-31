@@ -8,16 +8,23 @@ import com.bunshik.common.entity.AdminHistory;
 import com.bunshik.common.entity.Menu;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class AdminMenuService {
+
+    private static final Set<String> ALLOWED_CATEGORIES = Set.of(
+            "세트", "떡볶이", "라면", "김밥", "사이드", "음료"
+    );
 
     private final AdminMenuMapper menuMapper;
     private final AdminHistoryMapper adminHistoryMapper;
@@ -36,8 +43,95 @@ public class AdminMenuService {
         return menuMapper.findById(menuId);
     }
 
+    public List<Menu> findSetComponents(Long menuId) {
+        requireSetMenu(menuId);
+        return menuMapper.findSetComponents(menuId);
+    }
+
+    @Transactional
+    public int updateSetComponents(Long menuId, List<Long> componentMenuIds) {
+        Menu setMenu = requireSetMenu(menuId);
+        List<Long> uniqueComponentIds = validateComponentMenuIds(
+                menuId,
+                componentMenuIds
+        );
+        replaceSetComponents(menuId, uniqueComponentIds);
+
+        saveHistory(
+                "세트 구성 변경",
+                setMenu.getMenuName() + " 세트의 구성 메뉴가 변경되었습니다."
+        );
+
+        return uniqueComponentIds.size();
+    }
+
+    private Menu requireSetMenu(Long menuId) {
+        Menu menu = menuMapper.findById(menuId);
+
+        if (menu == null) {
+            throw new IllegalArgumentException("메뉴를 찾을 수 없습니다.");
+        }
+
+        if (!"세트".equals(menu.getCategory())) {
+            throw new IllegalArgumentException("세트 메뉴만 구성 메뉴를 관리할 수 있습니다.");
+        }
+
+        return menu;
+    }
+
+    private List<Long> validateComponentMenuIds(
+            Long setMenuId,
+            List<Long> componentMenuIds
+    ) {
+        List<Long> uniqueComponentIds = componentMenuIds == null
+                ? List.of()
+                : new LinkedHashSet<>(componentMenuIds).stream().toList();
+        List<Menu> menus = menuMapper.findAll();
+
+        for (Long componentMenuId : uniqueComponentIds) {
+            if (componentMenuId == null || componentMenuId.equals(setMenuId)) {
+                throw new IllegalArgumentException("세트 메뉴 자신은 구성 메뉴로 등록할 수 없습니다.");
+            }
+
+            Menu component = menus.stream()
+                    .filter(menu -> componentMenuId.equals(menu.getMenuId()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "존재하지 않는 구성 메뉴입니다: " + componentMenuId
+                    ));
+
+            if ("세트".equals(component.getCategory())) {
+                throw new IllegalArgumentException("다른 세트 메뉴는 구성 메뉴로 등록할 수 없습니다.");
+            }
+        }
+
+        return uniqueComponentIds;
+    }
+
+    private void replaceSetComponents(
+            Long setMenuId,
+            List<Long> componentMenuIds
+    ) {
+        menuMapper.deleteSetComponents(setMenuId);
+
+        if (!componentMenuIds.isEmpty()) {
+            menuMapper.insertSetComponents(setMenuId, componentMenuIds);
+        }
+    }
+
+    private void validateCategory(String category) {
+        if (!ALLOWED_CATEGORIES.contains(category)) {
+            throw new IllegalArgumentException("올바른 메뉴 카테고리를 선택해주세요.");
+        }
+    }
+
     // 메뉴 등록
-    public int insert(AdminMenuRequestDto dto, MultipartFile file) {
+    @Transactional
+    public Long insert(AdminMenuRequestDto dto, MultipartFile file) {
+        validateCategory(dto.getCategory());
+        List<Long> componentMenuIds = "세트".equals(dto.getCategory())
+                ? validateComponentMenuIds(null, dto.getComponentMenuIds())
+                : List.of();
 
         if (file != null && !file.isEmpty()) {
             String imageUrl = saveImage(file);
@@ -69,15 +163,28 @@ public class AdminMenuService {
             );
         }
 
-        return result;
+        if (result <= 0 || menu.getMenuId() == null) {
+            throw new IllegalStateException("메뉴 등록에 실패했습니다.");
+        }
+
+        if ("세트".equals(dto.getCategory())) {
+            replaceSetComponents(menu.getMenuId(), componentMenuIds);
+        }
+
+        return menu.getMenuId();
     }
 
     // 메뉴 수정
+    @Transactional
     public int update(
             Long menuId,
             AdminMenuRequestDto dto,
             MultipartFile file
     ) {
+        validateCategory(dto.getCategory());
+        List<Long> componentMenuIds = "세트".equals(dto.getCategory())
+                ? validateComponentMenuIds(menuId, dto.getComponentMenuIds())
+                : List.of();
 
         Menu oldMenu = menuMapper.findById(menuId);
 
@@ -115,6 +222,8 @@ public class AdminMenuService {
         int result = menuMapper.update(menu);
 
         if (result > 0) {
+            replaceSetComponents(menuId, componentMenuIds);
+
             // 새 이미지로 수정한 경우에만 기존 이미지 파일 삭제
             if (imageChanged) {
                 deleteImage(oldMenu);

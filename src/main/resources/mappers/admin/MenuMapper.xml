@@ -10,21 +10,35 @@
             resultType="com.bunshik.common.entity.Menu">
 
         SELECT
-        menu_id,
-        menu_name,
-        menu_name_en,
-        price,
-        category,
-        image_url,
-        description,
-        description_en,
-        is_available,
-        is_visible,
-        sold_out_reason,
-        created_at,
-        updated_at
-        FROM menus
-        ORDER BY menu_id ASC
+        m.menu_id,
+        m.menu_name,
+        m.menu_name_en,
+        m.price,
+        m.category,
+        m.image_url,
+        m.description,
+        m.description_en,
+        m.is_available,
+        CASE
+            WHEN EXISTS (
+                SELECT 1
+                FROM menu_set ms
+                JOIN menus component
+                  ON component.menu_id = ms.component_menu_id
+                WHERE ms.set_menu_id = m.menu_id
+                  AND (
+                      component.is_available = FALSE
+                      OR component.is_visible = FALSE
+                  )
+            ) THEN FALSE
+            ELSE m.is_available
+        END AS effective_available,
+        m.is_visible,
+        m.sold_out_reason,
+        m.created_at,
+        m.updated_at
+        FROM menus m
+        ORDER BY m.menu_id ASC
 
     </select>
 
@@ -34,27 +48,88 @@
             resultType="com.bunshik.common.entity.Menu">
 
         SELECT
-        menu_id,
-        menu_name,
-        menu_name_en,
-        price,
-        category,
-        image_url,
-        description,
-        description_en,
-        is_available,
-        is_visible,
-        sold_out_reason,
-        created_at,
-        updated_at
-        FROM menus
-        WHERE menu_id = #{menuId}
+        m.menu_id,
+        m.menu_name,
+        m.menu_name_en,
+        m.price,
+        m.category,
+        m.image_url,
+        m.description,
+        m.description_en,
+        m.is_available,
+        CASE
+            WHEN EXISTS (
+                SELECT 1
+                FROM menu_set ms
+                JOIN menus component
+                  ON component.menu_id = ms.component_menu_id
+                WHERE ms.set_menu_id = m.menu_id
+                  AND (
+                      component.is_available = FALSE
+                      OR component.is_visible = FALSE
+                  )
+            ) THEN FALSE
+            ELSE m.is_available
+        END AS effective_available,
+        m.is_visible,
+        m.sold_out_reason,
+        m.created_at,
+        m.updated_at
+        FROM menus m
+        WHERE m.menu_id = #{menuId}
 
     </select>
 
+    <!-- 세트 구성 메뉴 조회 -->
+    <select id="findSetComponents"
+            parameterType="long"
+            resultType="com.bunshik.common.entity.Menu">
+
+        SELECT
+        component.menu_id,
+        component.menu_name,
+        component.menu_name_en,
+        component.price,
+        component.category,
+        component.image_url,
+        component.description,
+        component.description_en,
+        component.is_available,
+        component.is_visible,
+        component.sold_out_reason,
+        component.created_at,
+        component.updated_at
+        FROM menu_set ms
+        JOIN menus component
+          ON component.menu_id = ms.component_menu_id
+        WHERE ms.set_menu_id = #{menuId}
+        ORDER BY component.menu_id ASC
+
+    </select>
+
+    <!-- 세트 구성 전체 삭제 후 선택 목록 재등록 -->
+    <delete id="deleteSetComponents"
+            parameterType="long">
+        DELETE FROM menu_set
+        WHERE set_menu_id = #{menuId}
+    </delete>
+
+    <insert id="insertSetComponents">
+        INSERT INTO menu_set (set_menu_id, component_menu_id)
+        VALUES
+        <foreach collection="componentMenuIds"
+                 item="componentMenuId"
+                 separator=",">
+            (#{setMenuId}, #{componentMenuId})
+        </foreach>
+    </insert>
+
     <!-- 등록 -->
     <insert id="insert"
-            parameterType="com.bunshik.common.entity.Menu">
+            parameterType="com.bunshik.common.entity.Menu"
+            useGeneratedKeys="true"
+            keyProperty="menuId"
+            keyColumn="menu_id">
 
         INSERT INTO menus
         (
