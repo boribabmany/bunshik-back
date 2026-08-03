@@ -69,7 +69,8 @@ public class TossPaymentService {
             throw new IllegalStateException("토스페이먼츠 승인에 실패했습니다.");
         }
 
-        paymentMapper.insertPayment(order.getOrderId(), order.getTotalPrice(), "토스페이", "성공", null);
+        paymentMapper.insertPayment(order.getOrderId(), order.getTotalPrice(), request.getPaymentMethod(),
+                "성공", null);
         paymentMapper.updateOrderStatus(order.getOrderId(), "접수");
 
         return PaymentResponseDto.builder().status("성공").build();

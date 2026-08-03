@@ -24,4 +24,8 @@ public class TossConfirmRequestDto {
 
     @NotNull(message = "결제 금액이 필요합니다.")
     private Integer amount;
+
+    @NotBlank(message = "결제 수단이 필요합니다.")
+    @JsonProperty("payment_method")
+    private String paymentMethod; // "토스페이" | "카카오페이"
 }
