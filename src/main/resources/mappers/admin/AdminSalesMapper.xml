@@ -14,14 +14,16 @@
         SELECT
         IFNULL(SUM(
         CASE
-        WHEN DATE(o.created_at) = CURDATE()
+        WHEN DATE(CONVERT_TZ(o.created_at, @@session.time_zone, '+09:00'))
+        = DATE(CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', '+09:00'))
         THEN o.total_price
         ELSE 0
         END
         ),0) AS todaySales,
         COUNT(
         CASE
-        WHEN DATE(o.created_at) = CURDATE()
+        WHEN DATE(CONVERT_TZ(o.created_at, @@session.time_zone, '+09:00'))
+        = DATE(CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', '+09:00'))
         THEN o.order_id
         END
         ) AS todayOrders,
@@ -29,9 +31,15 @@
 
         IFNULL(SUM(
         CASE
-        WHEN DATE_FORMAT(o.created_at,'%Y-%m')
+        WHEN DATE_FORMAT(
+        CONVERT_TZ(o.created_at, @@session.time_zone, '+09:00'),
+        '%Y-%m'
+        )
         =
-        DATE_FORMAT(CURDATE(),'%Y-%m')
+        DATE_FORMAT(
+        CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', '+09:00'),
+        '%Y-%m'
+        )
         THEN o.total_price
         ELSE 0
         END
@@ -40,9 +48,12 @@
 
         IFNULL(SUM(
         CASE
-        WHEN DATE(o.created_at)
+        WHEN DATE(CONVERT_TZ(o.created_at, @@session.time_zone, '+09:00'))
         =
-        DATE_SUB(CURDATE(),INTERVAL 1 DAY)
+        DATE_SUB(
+        DATE(CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', '+09:00')),
+        INTERVAL 1 DAY
+        )
         THEN o.total_price
         ELSE 0
         END
@@ -50,14 +61,9 @@
 
 
         IFNULL(AVG(o.total_price),0) AS averageOrderPrice,
-        COUNT(
-        CASE
-        WHEN o.order_status IN ('완료','COMPLETED')
-        THEN o.order_id
-        END
-        ) AS completedOrders
+        COUNT(o.order_id) AS completedOrders
         FROM orders o
-        WHERE o.order_status NOT IN ('취소','CANCELLED')
+        WHERE o.order_status IN ('완료','COMPLETED')
     </select>
     <!-- =========================
          인기 메뉴 TOP 5
@@ -72,7 +78,7 @@
         ON oi.order_id = o.order_id
         JOIN menus m
         ON oi.menu_id = m.menu_id
-        WHERE o.order_status NOT IN ('취소','CANCELLED')
+        WHERE o.order_status IN ('완료','COMPLETED')
         GROUP BY
         m.menu_id,
         m.menu_name
@@ -86,13 +92,17 @@
     <select id="getSalesHistory"
             resultType="com.bunshik.admin.dto.SalesHistoryResponse">
         SELECT
-        DATE(o.created_at) AS salesDate,
+        DATE(CONVERT_TZ(o.created_at, @@session.time_zone, '+09:00')) AS salesDate,
         COUNT(o.order_id) AS orderCount,
         SUM(o.total_price) AS totalSales
         FROM orders o
-        WHERE o.created_at >= DATE_SUB(CURDATE(),INTERVAL 30 DAY)
-        AND o.order_status NOT IN ('취소','CANCELLED')
-        GROUP BY DATE(o.created_at)
+        WHERE CONVERT_TZ(o.created_at, @@session.time_zone, '+09:00')
+        >= DATE_SUB(
+        DATE(CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', '+09:00')),
+        INTERVAL 29 DAY
+        )
+        AND o.order_status IN ('완료','COMPLETED')
+        GROUP BY DATE(CONVERT_TZ(o.created_at, @@session.time_zone, '+09:00'))
         ORDER BY salesDate desc
     </select>
 </mapper>
