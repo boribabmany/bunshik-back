@@ -21,7 +21,7 @@ class AdminSalesMapperSqlTest {
         assertThat(countOccurrences(
                 sql,
                 "order_status IN ('완료','COMPLETED')"
-        )).isEqualTo(3);
+        )).isEqualTo(7);
     }
 
     @Test
@@ -31,6 +31,16 @@ class AdminSalesMapperSqlTest {
         assertThat(sql)
                 .contains("CONVERT_TZ(o.created_at, @@session.time_zone, '+09:00')")
                 .contains("CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', '+09:00')");
+    }
+
+    @Test
+    void analyticsQueriesUseSelectedRangeAndSuccessfulPayments() throws Exception {
+        String sql = Files.readString(MAPPER_XML);
+
+        assertThat(sql)
+                .contains(">= #{startDate}")
+                .contains("&lt; #{endDateExclusive}")
+                .contains("p.payment_status = '성공'");
     }
 
     private int countOccurrences(String value, String target) {

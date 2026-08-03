@@ -2,12 +2,10 @@ package com.bunshik.admin.dto;
 
 import lombok.Data;
 
-import java.time.LocalDate;
-
 @Data
-public class SalesHistoryResponse {
+public class PaymentMethodSalesResponse {
 
-    private LocalDate salesDate;
+    private String paymentMethod;
     private int orderCount;
     private long totalSales;
 }

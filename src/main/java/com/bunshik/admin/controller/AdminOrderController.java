@@ -1,6 +1,7 @@
 package com.bunshik.admin.controller;
 
 import com.bunshik.admin.dto.AdminOrderSearchRequestDto;
+import com.bunshik.admin.dto.AdminOrderResponseDto;
 import com.bunshik.admin.dto.AdminOrderStatusRequestDto;
 import com.bunshik.admin.service.AdminOrderService;
 import com.bunshik.common.ApiResponse;
@@ -20,7 +21,7 @@ public class AdminOrderController {
 
     // 주문 전체 조회
     @GetMapping
-    public ApiResponse<List<Order>> findAll() {
+    public ApiResponse<List<AdminOrderResponseDto>> findAll() {
         return ApiResponse.success(
                 adminOrderService.findAll()
         );
@@ -38,7 +39,7 @@ public class AdminOrderController {
 
     // 주문 검색
     @GetMapping("/search")
-    public ApiResponse<List<Order>> search(
+    public ApiResponse<List<AdminOrderResponseDto>> search(
             AdminOrderSearchRequestDto dto
     ) {
         return ApiResponse.success(

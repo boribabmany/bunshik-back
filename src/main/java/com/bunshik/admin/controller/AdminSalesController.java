@@ -2,12 +2,15 @@ package com.bunshik.admin.controller;
 
 import com.bunshik.admin.dto.AdminSalesSummaryResponse;
 import com.bunshik.admin.dto.PopularMenuResponse;
+import com.bunshik.admin.dto.SalesAnalyticsResponse;
 import com.bunshik.admin.dto.SalesHistoryResponse;
 import com.bunshik.admin.service.AdminSalesService;
 import com.bunshik.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -41,6 +44,17 @@ public class AdminSalesController {
 
         return ApiResponse.success(
                 adminSalesService.getSalesHistory()
+        );
+    }
+
+    @GetMapping("/analytics")
+    public ApiResponse<SalesAnalyticsResponse> getSalesAnalytics(
+            @RequestParam(defaultValue = "day") String period,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        return ApiResponse.success(
+                adminSalesService.getSalesAnalytics(period, date)
         );
     }
 }

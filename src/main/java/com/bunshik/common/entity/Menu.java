@@ -12,6 +12,7 @@ public class Menu {
     private Long menuId;
     private String menuName;
     private String menuNameEn;
+    private String menuType;
     private Integer price;
     private String category;
     private String imageUrl;

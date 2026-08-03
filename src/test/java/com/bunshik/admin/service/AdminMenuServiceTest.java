@@ -17,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -127,6 +128,27 @@ class AdminMenuServiceTest {
         assertThatThrownBy(() -> adminMenuService.insert(request, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("올바른 메뉴 카테고리를 선택해주세요.");
+    }
+
+    @Test
+    void insertComponentMenuUsesZeroPriceWithoutImage() {
+        AdminMenuRequestDto request = request("떡볶이맛", List.of());
+        request.setMenuType("COMPONENT");
+        request.setPrice(5000);
+        when(menuMapper.insert(any(Menu.class))).thenAnswer(invocation -> {
+            Menu menu = invocation.getArgument(0);
+            menu.setMenuId(21L);
+            return 1;
+        });
+
+        Long menuId = adminMenuService.insert(request, null);
+
+        assertThat(menuId).isEqualTo(21L);
+        verify(menuMapper).insert(argThat(menu ->
+                "COMPONENT".equals(menu.getMenuType())
+                        && menu.getPrice() == 0
+                        && menu.getImageUrl() == null
+        ));
     }
 
     private AdminMenuRequestDto request(

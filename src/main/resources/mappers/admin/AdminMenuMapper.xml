@@ -13,6 +13,7 @@
         m.menu_id,
         m.menu_name,
         m.menu_name_en,
+        m.menu_type,
         m.price,
         m.category,
         m.image_url,
@@ -51,6 +52,7 @@
         m.menu_id,
         m.menu_name,
         m.menu_name_en,
+        m.menu_type,
         m.price,
         m.category,
         m.image_url,
@@ -131,6 +133,7 @@
         (
         menu_name,
         menu_name_en,
+        menu_type,
         price,
         category,
         image_url,
@@ -144,6 +147,7 @@
         (
         #{menuName},
         #{menuNameEn},
+        #{menuType},
         #{price},
         #{category},
         #{imageUrl},
@@ -165,6 +169,7 @@
         <set>
             menu_name = #{menuName},
             menu_name_en = #{menuNameEn},
+            menu_type = #{menuType},
             price = #{price},
             category = #{category},
 

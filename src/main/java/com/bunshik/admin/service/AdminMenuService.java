@@ -26,7 +26,10 @@ import java.util.stream.Collectors;
 public class AdminMenuService {
 
     private static final Set<String> ALLOWED_CATEGORIES = Set.of(
-            "세트", "떡볶이", "라면", "김밥", "사이드", "음료"
+            "세트", "떡볶이", "떡볶이맛", "라면", "김밥", "순대구성", "사이드", "음료"
+    );
+    private static final Set<String> ALLOWED_MENU_TYPES = Set.of(
+            "NORMAL", "COMPONENT"
     );
 
     private final AdminMenuMapper menuMapper;
@@ -200,10 +203,26 @@ public class AdminMenuService {
         }
     }
 
+    private String validateMenuType(String menuType, String category) {
+        String normalizedType = menuType == null || menuType.isBlank()
+                ? "NORMAL"
+                : menuType.trim().toUpperCase();
+
+        if (!ALLOWED_MENU_TYPES.contains(normalizedType)) {
+            throw new IllegalArgumentException("올바른 메뉴 용도를 선택해주세요.");
+        }
+        if ("세트".equals(category) && "COMPONENT".equals(normalizedType)) {
+            throw new IllegalArgumentException("세트 메뉴는 구성 전용 메뉴로 등록할 수 없습니다.");
+        }
+
+        return normalizedType;
+    }
+
     // 메뉴 등록
     @Transactional
     public Long insert(AdminMenuRequestDto dto, MultipartFile file) {
         validateCategory(dto.getCategory());
+        dto.setMenuType(validateMenuType(dto.getMenuType(), dto.getCategory()));
         List<Long> componentMenuIds = "세트".equals(dto.getCategory())
                 ? validateComponentMenuIds(null, dto.getComponentMenuIds())
                 : List.of();
@@ -219,7 +238,8 @@ public class AdminMenuService {
 
         menu.setMenuName(dto.getMenuName());
         menu.setMenuNameEn(dto.getMenuNameEn());
-        menu.setPrice(dto.getPrice());
+        menu.setMenuType(dto.getMenuType());
+        menu.setPrice("COMPONENT".equals(dto.getMenuType()) ? 0 : dto.getPrice());
         menu.setCategory(dto.getCategory());
         menu.setImageUrl(dto.getImageUrl());
         menu.setDescription(dto.getDescription());
@@ -259,6 +279,7 @@ public class AdminMenuService {
             MultipartFile file
     ) {
         validateCategory(dto.getCategory());
+        dto.setMenuType(validateMenuType(dto.getMenuType(), dto.getCategory()));
         List<Long> componentMenuIds = "세트".equals(dto.getCategory())
                 ? validateComponentMenuIds(menuId, dto.getComponentMenuIds())
                 : List.of();
@@ -283,7 +304,8 @@ public class AdminMenuService {
         menu.setMenuId(menuId);
         menu.setMenuName(dto.getMenuName());
         menu.setMenuNameEn(dto.getMenuNameEn());
-        menu.setPrice(dto.getPrice());
+        menu.setMenuType(dto.getMenuType());
+        menu.setPrice("COMPONENT".equals(dto.getMenuType()) ? 0 : dto.getPrice());
         menu.setCategory(dto.getCategory());
 
         // 새 이미지가 없으면 기존 이미지 유지

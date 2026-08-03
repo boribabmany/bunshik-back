@@ -69,8 +69,13 @@ public class AdminMenuController {
     )
     public ApiResponse<Long> insert(
             @ModelAttribute AdminMenuRequestDto dto,
-            @RequestParam("file") MultipartFile file
+            @RequestParam(value = "file", required = false) MultipartFile file
     ) {
+        if (!"COMPONENT".equalsIgnoreCase(dto.getMenuType())
+                && (file == null || file.isEmpty())) {
+            throw new IllegalArgumentException("메뉴 사진을 등록하세요.");
+        }
+
         Long menuId = adminMenuService.insert(dto, file);
 
         return ApiResponse.success(

@@ -1,5 +1,6 @@
 package com.bunshik.common.exception;
 import com.bunshik.common.ApiResponse;
+import com.bunshik.admin.security.LoginAttemptLimitException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -10,6 +11,15 @@ import java.io.IOException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(LoginAttemptLimitException.class)
+    public ResponseEntity<ApiResponse<Object>> handleLoginAttemptLimit(
+            LoginAttemptLimitException e
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(ApiResponse.error(e.getMessage()));
+    }
 
     // 요청 파라미터가 잘못됐을 때 (예: 필수값 누락, 존재하지 않는 리소스)
     @ExceptionHandler(IllegalArgumentException.class)

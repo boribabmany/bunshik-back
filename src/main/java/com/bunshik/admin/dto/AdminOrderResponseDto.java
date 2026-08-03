@@ -4,11 +4,10 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Setter
-public class AdminOrderDetailResponseDto {
+public class AdminOrderResponseDto {
 
     private Integer orderId;
     private String orderNumber;
@@ -17,6 +16,4 @@ public class AdminOrderDetailResponseDto {
     private String orderStatus;
     private LocalDateTime createdAt;
     private String paymentMethod;
-
-    private List<AdminOrderItemResponseDto> items;
 }

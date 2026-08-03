@@ -7,18 +7,26 @@
 
     <!-- 주문 전체 조회 -->
     <select id="findAll"
-            resultType="com.bunshik.common.entity.Order">
+            resultType="com.bunshik.admin.dto.AdminOrderResponseDto">
 
         SELECT
-        order_id,
-        order_number,
-        order_type,
-        total_price,
-        order_status,
-        created_at
-        FROM orders
-        WHERE order_status NOT IN ('결제대기', '취소')
-        ORDER BY order_id DESC
+        o.order_id,
+        o.order_number,
+        o.order_type,
+        o.total_price,
+        o.order_status,
+        o.created_at,
+        (
+        SELECT p.payment_method
+        FROM payments p
+        WHERE p.order_id = o.order_id
+        AND p.payment_status = '성공'
+        ORDER BY p.payment_id DESC
+        LIMIT 1
+        ) AS paymentMethod
+        FROM orders o
+        WHERE o.order_status NOT IN ('결제대기', '취소')
+        ORDER BY o.order_id DESC
 
     </select>
 
@@ -42,38 +50,46 @@
     <!-- 주문 검색 -->
     <select id="search"
             parameterType="com.bunshik.admin.dto.AdminOrderSearchRequestDto"
-            resultType="com.bunshik.common.entity.Order">
+            resultType="com.bunshik.admin.dto.AdminOrderResponseDto">
 
         SELECT
-        order_id,
-        order_number,
-        order_type,
-        total_price,
-        order_status,
-        created_at
-        FROM orders
+        o.order_id,
+        o.order_number,
+        o.order_type,
+        o.total_price,
+        o.order_status,
+        o.created_at,
+        (
+        SELECT p.payment_method
+        FROM payments p
+        WHERE p.order_id = o.order_id
+        AND p.payment_status = '성공'
+        ORDER BY p.payment_id DESC
+        LIMIT 1
+        ) AS paymentMethod
+        FROM orders o
 
         <where>
 
             <if test="date != null and date != ''">
-                DATE(created_at) = #{date}
+                DATE(o.created_at) = #{date}
             </if>
 
             <if test="orderType != null
                       and orderType != ''
                       and orderType != '전체'">
-                AND order_type = #{orderType}
+                AND o.order_type = #{orderType}
             </if>
 
             <if test="orderStatus != null
                       and orderStatus != ''
                       and orderStatus != '전체'">
-                AND order_status = #{orderStatus}
+                AND o.order_status = #{orderStatus}
             </if>
 
         </where>
 
-        ORDER BY order_id DESC
+        ORDER BY o.order_id DESC
 
     </select>
 
@@ -151,6 +167,17 @@
         snapshot.order_item_id ASC,
         snapshot.component_menu_id ASC
 
+    </select>
+
+    <select id="findSuccessfulPaymentMethod"
+            parameterType="int"
+            resultType="String">
+        SELECT payment_method
+        FROM payments
+        WHERE order_id = #{orderId}
+        AND payment_status = '성공'
+        ORDER BY payment_id DESC
+        LIMIT 1
     </select>
 
 </mapper>

@@ -6,6 +6,7 @@ import com.bunshik.admin.service.AdminAuthService;
 import com.bunshik.common.ApiResponse;
 
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,9 +25,13 @@ public class AdminAuthController {
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AdminLoginResponseDto>> login(
-            @Valid @RequestBody AdminLoginRequestDto dto) {
+            @Valid @RequestBody AdminLoginRequestDto dto,
+            HttpServletRequest request) {
 
-        AdminLoginResponseDto response = adminAuthService.login(dto);
+        AdminLoginResponseDto response = adminAuthService.login(
+                dto,
+                request.getRemoteAddr()
+        );
 
         return ResponseEntity.ok(
                 ApiResponse.success(response, "로그인 성공")

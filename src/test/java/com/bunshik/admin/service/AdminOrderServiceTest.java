@@ -2,6 +2,7 @@ package com.bunshik.admin.service;
 
 import com.bunshik.admin.dto.AdminOrderDetailResponseDto;
 import com.bunshik.admin.dto.AdminOrderItemRowDto;
+import com.bunshik.admin.dto.AdminOrderResponseDto;
 import com.bunshik.admin.dto.AdminOrderStatusRequestDto;
 import com.bunshik.admin.dto.AdminOrderSetComponentRowDto;
 import com.bunshik.admin.mappers.AdminHistoryMapper;
@@ -44,7 +45,10 @@ class AdminOrderServiceTest {
 
     @Test
     void findAllReturnsMapperResult() {
-        List<Order> orders = List.of(order(1, "접수"));
+        AdminOrderResponseDto order = new AdminOrderResponseDto();
+        order.setOrderId(1);
+        order.setPaymentMethod("카드");
+        List<AdminOrderResponseDto> orders = List.of(order);
         when(orderMapper.findAll()).thenReturn(orders);
 
         assertThat(adminOrderService.findAll()).isSameAs(orders);
@@ -72,11 +76,13 @@ class AdminOrderServiceTest {
                 componentRow(10, 201, "떡볶이"),
                 componentRow(10, 202, "순대")
         ));
+        when(orderMapper.findSuccessfulPaymentMethod(1)).thenReturn("카카오페이");
 
         AdminOrderDetailResponseDto detail =
                 adminOrderService.findDetailById(1);
 
         assertThat(detail.getOrderId()).isEqualTo(1);
+        assertThat(detail.getPaymentMethod()).isEqualTo("카카오페이");
         assertThat(detail.getItems()).hasSize(2);
         assertThat(detail.getItems().get(0).getMenuName()).isEqualTo("떡볶이");
         assertThat(detail.getItems().get(0).getOptions())

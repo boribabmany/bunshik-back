@@ -105,4 +105,72 @@
         GROUP BY DATE(CONVERT_TZ(o.created_at, @@session.time_zone, '+09:00'))
         ORDER BY salesDate desc
     </select>
+
+    <select id="getPeriodSalesSummary"
+            resultType="com.bunshik.admin.dto.PeriodSalesSummaryResponse">
+        SELECT
+        IFNULL(SUM(o.total_price), 0) AS totalSales,
+        COUNT(o.order_id) AS orderCount,
+        IFNULL(AVG(o.total_price), 0) AS averageOrderPrice
+        FROM orders o
+        WHERE CONVERT_TZ(o.created_at, @@session.time_zone, '+09:00')
+        >= #{startDate}
+        AND CONVERT_TZ(o.created_at, @@session.time_zone, '+09:00')
+        &lt; #{endDateExclusive}
+        AND o.order_status IN ('완료','COMPLETED')
+    </select>
+
+    <select id="getPeriodSalesHistory"
+            resultType="com.bunshik.admin.dto.SalesHistoryResponse">
+        SELECT
+        DATE(CONVERT_TZ(o.created_at, @@session.time_zone, '+09:00')) AS salesDate,
+        COUNT(o.order_id) AS orderCount,
+        IFNULL(SUM(o.total_price), 0) AS totalSales
+        FROM orders o
+        WHERE CONVERT_TZ(o.created_at, @@session.time_zone, '+09:00')
+        >= #{startDate}
+        AND CONVERT_TZ(o.created_at, @@session.time_zone, '+09:00')
+        &lt; #{endDateExclusive}
+        AND o.order_status IN ('완료','COMPLETED')
+        GROUP BY DATE(CONVERT_TZ(o.created_at, @@session.time_zone, '+09:00'))
+        ORDER BY salesDate DESC
+    </select>
+
+    <select id="getMenuSales"
+            resultType="com.bunshik.admin.dto.MenuSalesResponse">
+        SELECT
+        m.menu_id AS menuId,
+        m.menu_name AS menuName,
+        SUM(oi.quantity) AS quantity,
+        IFNULL(SUM(oi.price_at_order * oi.quantity), 0) AS totalSales
+        FROM order_items oi
+        JOIN orders o ON oi.order_id = o.order_id
+        JOIN menus m ON oi.menu_id = m.menu_id
+        WHERE CONVERT_TZ(o.created_at, @@session.time_zone, '+09:00')
+        >= #{startDate}
+        AND CONVERT_TZ(o.created_at, @@session.time_zone, '+09:00')
+        &lt; #{endDateExclusive}
+        AND o.order_status IN ('완료','COMPLETED')
+        GROUP BY m.menu_id, m.menu_name
+        ORDER BY totalSales DESC, quantity DESC, m.menu_id
+    </select>
+
+    <select id="getPaymentMethodSales"
+            resultType="com.bunshik.admin.dto.PaymentMethodSalesResponse">
+        SELECT
+        p.payment_method AS paymentMethod,
+        COUNT(DISTINCT o.order_id) AS orderCount,
+        IFNULL(SUM(o.total_price), 0) AS totalSales
+        FROM orders o
+        JOIN payments p
+        ON p.order_id = o.order_id
+        AND p.payment_status = '성공'
+        WHERE CONVERT_TZ(o.created_at, @@session.time_zone, '+09:00')
+        >= #{startDate}
+        AND CONVERT_TZ(o.created_at, @@session.time_zone, '+09:00')
+        &lt; #{endDateExclusive}
+        AND o.order_status IN ('완료','COMPLETED')
+        GROUP BY p.payment_method
+        ORDER BY totalSales DESC, p.payment_method
+    </select>
 </mapper>

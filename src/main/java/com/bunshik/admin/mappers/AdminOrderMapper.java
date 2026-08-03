@@ -1,6 +1,7 @@
 package com.bunshik.admin.mappers;
 
 import com.bunshik.admin.dto.AdminOrderItemRowDto;
+import com.bunshik.admin.dto.AdminOrderResponseDto;
 import com.bunshik.admin.dto.AdminOrderSearchRequestDto;
 import com.bunshik.admin.dto.AdminOrderSetComponentRowDto;
 import com.bunshik.common.entity.Order;
@@ -12,13 +13,13 @@ import java.util.List;
 public interface AdminOrderMapper {
 
     // 주문 전체 조회
-    List<Order> findAll();
+    List<AdminOrderResponseDto> findAll();
 
     // 주문 상세 조회
     Order findById(Integer orderId);
 
     // 주문 검색 (날짜, 주문유형, 주문상태)
-    List<Order> search(AdminOrderSearchRequestDto dto);
+    List<AdminOrderResponseDto> search(AdminOrderSearchRequestDto dto);
 
     // 주문 상태 변경
     int updateStatus(Order order);
@@ -32,4 +33,6 @@ public interface AdminOrderMapper {
     List<AdminOrderSetComponentRowDto> findSetComponentsByOrderId(
             Integer orderId
     );
+
+    String findSuccessfulPaymentMethod(Integer orderId);
 }

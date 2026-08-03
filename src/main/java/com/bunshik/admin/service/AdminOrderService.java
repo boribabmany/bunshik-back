@@ -4,6 +4,7 @@ import com.bunshik.admin.dto.AdminOrderDetailResponseDto;
 import com.bunshik.admin.dto.AdminOrderItemResponseDto;
 import com.bunshik.admin.dto.AdminOrderItemRowDto;
 import com.bunshik.admin.dto.AdminOrderOptionResponseDto;
+import com.bunshik.admin.dto.AdminOrderResponseDto;
 import com.bunshik.admin.dto.AdminOrderSearchRequestDto;
 import com.bunshik.admin.dto.AdminOrderSetComponentResponseDto;
 import com.bunshik.admin.dto.AdminOrderSetComponentRowDto;
@@ -47,7 +48,7 @@ public class AdminOrderService {
             );
 
     // 주문 전체 조회
-    public List<Order> findAll() {
+    public List<AdminOrderResponseDto> findAll() {
         return orderMapper.findAll();
     }
 
@@ -147,13 +148,16 @@ public class AdminOrderService {
         detail.setTotalPrice(order.getTotalPrice());
         detail.setOrderStatus(order.getOrderStatus());
         detail.setCreatedAt(order.getCreatedAt());
+        detail.setPaymentMethod(
+                orderMapper.findSuccessfulPaymentMethod(orderId)
+        );
         detail.setItems(new ArrayList<>(itemMap.values()));
 
         return detail;
     }
 
     // 주문 검색
-    public List<Order> search(AdminOrderSearchRequestDto dto) {
+    public List<AdminOrderResponseDto> search(AdminOrderSearchRequestDto dto) {
         return orderMapper.search(dto);
     }
 

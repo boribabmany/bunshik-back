@@ -4,6 +4,7 @@ import com.bunshik.admin.dto.AdminLoginRequestDto;
 import com.bunshik.admin.dto.AdminLoginResponseDto;
 import com.bunshik.admin.jwt.AdminJwtTokenProvider;
 import com.bunshik.admin.mappers.AdminAuthMapper;
+import com.bunshik.admin.security.LoginAttemptLimitException;
 import com.bunshik.common.entity.AdminUser;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +31,9 @@ class AdminAuthServiceTest {
     @Mock
     private AdminJwtTokenProvider adminJwtTokenProvider;
 
+    @Mock
+    private AdminLoginAttemptService loginAttemptService;
+
     @InjectMocks
     private AdminAuthService adminAuthService;
 
@@ -44,13 +48,17 @@ class AdminAuthServiceTest {
         when(adminJwtTokenProvider.createToken(1, "admin"))
                 .thenReturn("access-token");
 
-        AdminLoginResponseDto response = adminAuthService.login(request);
+        AdminLoginResponseDto response = adminAuthService.login(
+                request,
+                "127.0.0.1"
+        );
 
         assertThat(response.getId()).isEqualTo(1);
         assertThat(response.getUsername()).isEqualTo("admin");
         assertThat(response.getAccessToken()).isEqualTo("access-token");
         assertThat(response.getTokenType()).isEqualTo("Bearer");
         verify(adminJwtTokenProvider).createToken(1, "admin");
+        verify(loginAttemptService).recordSuccess("admin", "127.0.0.1");
     }
 
     @Test
@@ -58,7 +66,7 @@ class AdminAuthServiceTest {
         AdminLoginRequestDto request = loginRequest("missing", "password123");
         when(adminAuthMapper.findByUsername("missing")).thenReturn(null);
 
-        assertThatThrownBy(() -> adminAuthService.login(request))
+        assertThatThrownBy(() -> adminAuthService.login(request, "127.0.0.1"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("아이디 또는 비밀번호가 올바르지 않습니다.");
 
@@ -71,7 +79,7 @@ class AdminAuthServiceTest {
         AdminUser admin = adminUser(1, "admin", "encoded-password", false);
         when(adminAuthMapper.findByUsername("admin")).thenReturn(admin);
 
-        assertThatThrownBy(() -> adminAuthService.login(request))
+        assertThatThrownBy(() -> adminAuthService.login(request, "127.0.0.1"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("비활성화된 관리자 계정입니다.");
 
@@ -87,9 +95,27 @@ class AdminAuthServiceTest {
         when(passwordEncoder.matches("wrong-password", "encoded-password"))
                 .thenReturn(false);
 
-        assertThatThrownBy(() -> adminAuthService.login(request))
+        assertThatThrownBy(() -> adminAuthService.login(request, "127.0.0.1"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("아이디 또는 비밀번호가 올바르지 않습니다.");
+
+        verifyNoInteractions(adminJwtTokenProvider);
+    }
+
+    @Test
+    void fifthFailedLoginReturnsRateLimitError() {
+        AdminLoginRequestDto request = loginRequest("admin", "wrong-password");
+        AdminUser admin = adminUser(1, "admin", "encoded-password", true);
+
+        when(adminAuthMapper.findByUsername("admin")).thenReturn(admin);
+        when(passwordEncoder.matches("wrong-password", "encoded-password"))
+                .thenReturn(false);
+        when(loginAttemptService.recordFailure("admin", "127.0.0.1"))
+                .thenReturn(true);
+
+        assertThatThrownBy(() -> adminAuthService.login(request, "127.0.0.1"))
+                .isInstanceOf(LoginAttemptLimitException.class)
+                .hasMessage("로그인에 5회 실패하여 10분간 로그인이 제한됩니다.");
 
         verifyNoInteractions(adminJwtTokenProvider);
     }
