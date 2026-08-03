@@ -72,6 +72,7 @@
         LEFT JOIN menu_set ms2 ON m.menu_id = ms2.set_menu_id AND ms2.select_group IS NOT NULL
         LEFT JOIN menus cm2 ON ms2.component_menu_id = cm2.menu_id AND cm2.is_visible = TRUE
         WHERE m.is_visible = TRUE
+        AND m.is_component_only = FALSE
         ORDER BY m.sort_order ASC
     </select>
 
