@@ -1,6 +1,7 @@
 package com.bunshik.admin.service;
 
 import com.bunshik.admin.dto.AdminMenuRequestDto;
+import com.bunshik.admin.dto.SetMenuComponentDto;
 import com.bunshik.admin.mappers.AdminHistoryMapper;
 import com.bunshik.admin.mappers.AdminMenuMapper;
 import com.bunshik.admin.security.CurrentAdminProvider;
@@ -78,6 +79,24 @@ class AdminMenuServiceTest {
         assertThatThrownBy(() -> adminMenuService.insert(request, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("세트 메뉴는 구성 메뉴를 한 개 이상 선택해야 합니다.");
+
+        verify(menuMapper, never()).insert(any(Menu.class));
+    }
+
+    @Test
+    void insertSetMenuRejectsGroupMaxSelectGreaterThanOne() {
+        AdminMenuRequestDto request = request("세트", List.of(1L, 2L));
+        SetMenuComponentDto first = componentSetting(1L, "메뉴선택", 2);
+        SetMenuComponentDto second = componentSetting(2L, "메뉴선택", 2);
+        request.setComponentSettings(List.of(first, second));
+        when(menuMapper.findAll()).thenReturn(List.of(
+                menu(1L, "떡볶이"),
+                menu(2L, "사이드")
+        ));
+
+        assertThatThrownBy(() -> adminMenuService.insert(request, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("현재 선택 그룹은 최대 1개 선택만 지원합니다.");
 
         verify(menuMapper, never()).insert(any(Menu.class));
     }
@@ -165,6 +184,19 @@ class AdminMenuServiceTest {
         request.setIsAvailable(true);
         request.setComponentMenuIds(componentMenuIds);
         return request;
+    }
+
+    private SetMenuComponentDto componentSetting(
+            Long menuId,
+            String selectGroup,
+            int groupMaxSelect
+    ) {
+        SetMenuComponentDto setting = new SetMenuComponentDto();
+        setting.setComponentMenuId(menuId);
+        setting.setSelectGroup(selectGroup);
+        setting.setGroupMaxSelect(groupMaxSelect);
+        setting.setExtraPrice(0);
+        return setting;
     }
 
     private Menu menu(Long menuId, String category) {

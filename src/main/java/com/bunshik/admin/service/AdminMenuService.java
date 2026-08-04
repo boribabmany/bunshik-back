@@ -154,8 +154,8 @@ public class AdminMenuService {
             if (group == null || group.isBlank()) {
                 setting.setSelectGroup(null);
                 setting.setGroupMaxSelect(null);
-            } else if (setting.getGroupMaxSelect() == null || setting.getGroupMaxSelect() < 1) {
-                throw new IllegalArgumentException("선택 그룹의 최대 선택 수는 1 이상이어야 합니다.");
+            } else if (setting.getGroupMaxSelect() == null || setting.getGroupMaxSelect() != 1) {
+                throw new IllegalArgumentException("현재 선택 그룹은 최대 1개 선택만 지원합니다.");
             }
             if (setting.getExtraPrice() == null) {
                 setting.setExtraPrice(0);
