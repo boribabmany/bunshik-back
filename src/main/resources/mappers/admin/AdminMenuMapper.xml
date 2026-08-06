@@ -27,10 +27,28 @@
                 JOIN menus component
                   ON component.menu_id = ms.component_menu_id
                 WHERE ms.set_menu_id = m.menu_id
+                  AND ms.select_group IS NULL
                   AND (
                       component.is_available = FALSE
                       OR component.is_visible = FALSE
                   )
+            ) THEN FALSE
+            WHEN EXISTS (
+                SELECT ms.select_group
+                FROM menu_set ms
+                JOIN menus component
+                  ON component.menu_id = ms.component_menu_id
+                WHERE ms.set_menu_id = m.menu_id
+                  AND ms.select_group IS NOT NULL
+                GROUP BY ms.select_group
+                HAVING SUM(
+                    CASE
+                        WHEN component.is_available = TRUE
+                         AND component.is_visible = TRUE
+                        THEN 1
+                        ELSE 0
+                    END
+                ) = 0
             ) THEN FALSE
             ELSE m.is_available
         END AS effective_available,
@@ -66,10 +84,28 @@
                 JOIN menus component
                   ON component.menu_id = ms.component_menu_id
                 WHERE ms.set_menu_id = m.menu_id
+                  AND ms.select_group IS NULL
                   AND (
                       component.is_available = FALSE
                       OR component.is_visible = FALSE
                   )
+            ) THEN FALSE
+            WHEN EXISTS (
+                SELECT ms.select_group
+                FROM menu_set ms
+                JOIN menus component
+                  ON component.menu_id = ms.component_menu_id
+                WHERE ms.set_menu_id = m.menu_id
+                  AND ms.select_group IS NOT NULL
+                GROUP BY ms.select_group
+                HAVING SUM(
+                    CASE
+                        WHEN component.is_available = TRUE
+                         AND component.is_visible = TRUE
+                        THEN 1
+                        ELSE 0
+                    END
+                ) = 0
             ) THEN FALSE
             ELSE m.is_available
         END AS effective_available,
