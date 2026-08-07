@@ -67,11 +67,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:3000",       // kiosk-customer (로컬 개발)
-                "http://localhost:3001",       // kiosk-admin (로컬 개발)
-                "http://192.168.40.16:3000",   // kiosk-customer (같은 네트워크 다른 기기 테스트용)
-                "http://192.168.40.16:3001"    // kiosk-admin (같은 네트워크 다른 기기 테스트용)
+        // 로컬 개발(localhost) + 같은 사설망(192.168.40.x) 어떤 기기·포트에서 접속해도 허용
+        configuration.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
+                "http://192.168.40.*:*"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
