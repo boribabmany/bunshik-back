@@ -16,8 +16,10 @@ import java.util.Set;
 @Transactional
 public class PaymentService {
 
-    private static final Set<String> VALID_PAYMENT_METHODS = Set.of("카드", "네이버페이", "카카오페이");
-    private static final Set<String> EASY_PAY_METHODS = Set.of("네이버페이", "카카오페이");
+    // 2026-08-06부터 카카오페이는 토스페이먼츠 실결제(POST /api/toss/confirm)로 이관되어
+    // 이 시뮬레이션 결제 API에서는 더 이상 허용하지 않는다.
+    private static final Set<String> VALID_PAYMENT_METHODS = Set.of("카드", "네이버페이");
+    private static final Set<String> EASY_PAY_METHODS = Set.of("네이버페이");
 
     private final PaymentMapper paymentMapper;
     private final Random random = new Random();

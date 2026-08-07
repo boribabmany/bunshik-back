@@ -100,19 +100,33 @@ class PaymentServiceTest {
             when(paymentMapper.getOrderForPayment(1)).thenReturn(orderInfo(1, "결제대기", 8000));
             when(paymentMapper.countSuccessfulPayments(1)).thenReturn(0);
 
-            PaymentResponseDto response = paymentService.processPayment(paymentRequest(1, "카카오페이"));
+            PaymentResponseDto response = paymentService.processPayment(paymentRequest(1, "네이버페이"));
 
             assertThat(response.getStatus()).isIn("성공", "실패");
 
             if ("성공".equals(response.getStatus())) {
-                verify(paymentMapper).insertPayment(eq(1), eq(8000), eq("카카오페이"), eq("성공"), eq(null));
+                verify(paymentMapper).insertPayment(eq(1), eq(8000), eq("네이버페이"), eq("성공"), eq(null));
                 verify(paymentMapper).updateOrderStatus(1, "접수");
             } else {
                 assertThat(response.getFailType()).isNotNull();
-                assertThat(response.getFailReason()).contains("카카오페이");
+                assertThat(response.getFailReason()).contains("네이버페이");
                 verify(paymentMapper).updateOrderStatus(1, "결제대기");
             }
         }
+    }
+
+    @Test
+    void processPaymentRejectsKakaoPayNowRoutedThroughToss() {
+        // 2026-08-06부터 카카오페이는 POST /api/toss/confirm으로 이관되어
+        // 이 시뮬레이션 결제 API(/api/payments)에서는 더 이상 허용되지 않는다.
+        PaymentMapper paymentMapper = mock(PaymentMapper.class);
+        PaymentService paymentService = new PaymentService(paymentMapper);
+
+        assertThatThrownBy(() -> paymentService.processPayment(paymentRequest(1, "카카오페이")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("지원하지 않는 결제 수단입니다: 카카오페이");
+
+        verify(paymentMapper, never()).insertPayment(any(), any(), any(), any(), any());
     }
 
     private PaymentRequestDto paymentRequest(Integer orderId, String paymentMethod) {
