@@ -68,8 +68,10 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
-                "http://localhost:3000",   // kiosk-customer
-                "http://localhost:3001"    // kiosk-admin
+                "http://localhost:3000",       // kiosk-customer (로컬 개발)
+                "http://localhost:3001",       // kiosk-admin (로컬 개발)
+                "http://192.168.40.16:3000",   // kiosk-customer (같은 네트워크 다른 기기 테스트용)
+                "http://192.168.40.16:3001"    // kiosk-admin (같은 네트워크 다른 기기 테스트용)
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
