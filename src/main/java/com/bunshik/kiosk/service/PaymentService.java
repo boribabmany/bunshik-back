@@ -54,7 +54,8 @@ public class PaymentService {
                 order.getTotalPrice(),
                 paymentMethod,
                 result.success ? "성공" : "실패",
-                result.failReason
+                result.failReason,
+                null
         );
 
         // 결제 성공 → 접수(주방으로 전달)

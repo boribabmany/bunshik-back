@@ -5,6 +5,7 @@ import com.bunshik.admin.dto.AdminOrderResponseDto;
 import com.bunshik.admin.dto.AdminOrderSearchRequestDto;
 import com.bunshik.admin.dto.AdminOrderSetComponentRowDto;
 import com.bunshik.common.entity.Order;
+import com.bunshik.common.entity.Payment;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -35,4 +36,8 @@ public interface AdminOrderMapper {
     );
 
     String findSuccessfulPaymentMethod(Integer orderId);
+
+    Payment findSuccessfulPayment(Integer orderId);
+
+    int markPaymentCanceled(Long paymentId);
 }

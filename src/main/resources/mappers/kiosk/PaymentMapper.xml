@@ -20,9 +20,9 @@
 
     <insert id="insertPayment">
         INSERT INTO payments
-        (order_id, amount, payment_method, payment_status, fail_reason)
+        (order_id, amount, payment_method, payment_status, fail_reason, payment_key)
         VALUES
-        (#{orderId}, #{amount}, #{paymentMethod}, #{paymentStatus}, #{failReason})
+        (#{orderId}, #{amount}, #{paymentMethod}, #{paymentStatus}, #{failReason}, #{paymentKey})
     </insert>
 
     <update id="updateOrderStatus">

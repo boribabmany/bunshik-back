@@ -10,11 +10,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -28,6 +36,9 @@ class TossPaymentServiceTest {
     @Mock
     private PaymentMapper paymentMapper;
 
+    @Mock
+    private RestTemplate restTemplate;
+
     @InjectMocks
     private TossPaymentService tossPaymentService;
 
@@ -39,7 +50,7 @@ class TossPaymentServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("존재하지 않는 주문입니다: 99");
 
-        verify(paymentMapper, never()).insertPayment(any(), any(), any(), any(), any());
+        verify(paymentMapper, never()).insertPayment(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -51,7 +62,7 @@ class TossPaymentServiceTest {
 
         assertThat(response.getStatus()).isEqualTo("성공");
         // 이미 결제된 주문이므로 토스에 다시 승인 요청을 보내거나 결제를 중복 기록하면 안 됨
-        verify(paymentMapper, never()).insertPayment(any(), any(), any(), any(), any());
+        verify(paymentMapper, never()).insertPayment(any(), any(), any(), any(), any(), any());
         verify(paymentMapper, never()).updateOrderStatus(any(), any());
     }
 
@@ -74,7 +85,26 @@ class TossPaymentServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("결제 금액이 주문 금액과 일치하지 않습니다.");
 
-        verify(paymentMapper, never()).insertPayment(any(), any(), any(), any(), any());
+        verify(paymentMapper, never()).insertPayment(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void confirmStoresPaymentKeyReturnedByToss() {
+        when(paymentMapper.getOrderForPayment(1)).thenReturn(orderInfo(1, "결제대기", 10000));
+        when(paymentMapper.countSuccessfulPayments(1)).thenReturn(0);
+        when(restTemplate.postForEntity(
+                contains("/v1/payments/confirm"),
+                any(HttpEntity.class),
+                eq(Map.class)
+        )).thenReturn(ResponseEntity.ok(Map.of("paymentKey", "confirmed-payment-key")));
+
+        PaymentResponseDto response = tossPaymentService.confirm(confirmRequest(1, 10000));
+
+        assertThat(response.getStatus()).isEqualTo("성공");
+        verify(paymentMapper).insertPayment(
+                1, 10000, "토스페이", "성공", null, "confirmed-payment-key"
+        );
+        verify(paymentMapper).updateOrderStatus(1, "접수");
     }
 
     @Test
@@ -86,6 +116,25 @@ class TossPaymentServiceTest {
         assertThatCode(() -> tossPaymentService.fail(request)).doesNotThrowAnyException();
 
         verifyNoInteractions(paymentMapper);
+    }
+
+    @Test
+    void cancelCallsTossCancelApiWithPaymentKey() {
+        ReflectionTestUtils.setField(tossPaymentService, "tossSecretKey", "test-secret");
+        when(restTemplate.postForEntity(
+                contains("/test-payment-key/cancel"),
+                any(HttpEntity.class),
+                eq(Map.class)
+        )).thenReturn(ResponseEntity.ok(Map.of("status", "CANCELED")));
+
+        assertThatCode(() -> tossPaymentService.cancel("test-payment-key", 1))
+                .doesNotThrowAnyException();
+
+        verify(restTemplate).postForEntity(
+                contains("/test-payment-key/cancel"),
+                any(HttpEntity.class),
+                eq(Map.class)
+        );
     }
 
     private TossConfirmRequestDto confirmRequest(Integer orderId, Integer amount) {

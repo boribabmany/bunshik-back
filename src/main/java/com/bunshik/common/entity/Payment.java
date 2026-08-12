@@ -15,5 +15,6 @@ public class Payment {
     private String paymentMethod;  // "카드" | "네이버페이" | "카카오페이"
     private String paymentStatus;  // "성공" | "카드오류" | "거절" | "시스템오류" | "취소"
     private String failReason;
+    private String paymentKey;
     private LocalDateTime attemptedAt;
 }

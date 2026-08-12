@@ -10,6 +10,8 @@ import com.bunshik.admin.mappers.AdminOrderMapper;
 import com.bunshik.admin.security.CurrentAdminProvider;
 import com.bunshik.common.entity.AdminHistory;
 import com.bunshik.common.entity.Order;
+import com.bunshik.common.entity.Payment;
+import com.bunshik.kiosk.service.TossPaymentService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -24,8 +26,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.same;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,6 +43,9 @@ class AdminOrderServiceTest {
 
     @Mock
     private CurrentAdminProvider currentAdminProvider;
+
+    @Mock
+    private TossPaymentService tossPaymentService;
 
     @InjectMocks
     private AdminOrderService adminOrderService;
@@ -174,6 +181,67 @@ class AdminOrderServiceTest {
         verify(adminHistoryMapper, never()).insertHistory(any(AdminHistory.class));
     }
 
+    @Test
+    void cancelRefundsTossPaymentBeforeCancelingOrder() {
+        Payment payment = payment(11L, "카카오페이", "payment-key-1");
+        when(orderMapper.findById(1)).thenReturn(order(1, "접수"));
+        when(orderMapper.findSuccessfulPayment(1)).thenReturn(payment);
+        when(orderMapper.markPaymentCanceled(11L)).thenReturn(1);
+        when(orderMapper.cancel(1)).thenReturn(1);
+
+        assertThat(adminOrderService.cancel(1)).isEqualTo(1);
+
+        verify(tossPaymentService).cancel("payment-key-1", 1);
+        verify(orderMapper).markPaymentCanceled(11L);
+        verify(orderMapper).cancel(1);
+    }
+
+    @Test
+    void cancelRejectsLegacyTossPaymentWithoutPaymentKey() {
+        Payment payment = payment(11L, "토스페이", null);
+        when(orderMapper.findById(1)).thenReturn(order(1, "접수"));
+        when(orderMapper.findSuccessfulPayment(1)).thenReturn(payment);
+
+        assertThatThrownBy(() -> adminOrderService.cancel(1))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("paymentKey가 없어 자동 환불할 수 없습니다");
+
+        verify(tossPaymentService, never()).cancel(any(), any());
+        verify(orderMapper, never()).markPaymentCanceled(any());
+        verify(orderMapper, never()).cancel(1);
+    }
+
+    @Test
+    void cancelKeepsDatabaseUnchangedWhenTossRefundFails() {
+        Payment payment = payment(11L, "토스페이", "payment-key-1");
+        when(orderMapper.findById(1)).thenReturn(order(1, "접수"));
+        when(orderMapper.findSuccessfulPayment(1)).thenReturn(payment);
+        doThrow(new IllegalStateException("결제 환불에 실패했습니다."))
+                .when(tossPaymentService).cancel("payment-key-1", 1);
+
+        assertThatThrownBy(() -> adminOrderService.cancel(1))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("결제 환불에 실패했습니다.");
+
+        verify(orderMapper, never()).markPaymentCanceled(any());
+        verify(orderMapper, never()).cancel(1);
+        verify(adminHistoryMapper, never()).insertHistory(any(AdminHistory.class));
+    }
+
+    @Test
+    void cancelSimulatedPaymentWithoutCallingRefundApi() {
+        Payment payment = payment(12L, "네이버페이", null);
+        when(orderMapper.findById(1)).thenReturn(order(1, "접수"));
+        when(orderMapper.findSuccessfulPayment(1)).thenReturn(payment);
+        when(orderMapper.cancel(1)).thenReturn(1);
+
+        assertThat(adminOrderService.cancel(1)).isEqualTo(1);
+
+        verifyNoInteractions(tossPaymentService);
+        verify(orderMapper, never()).markPaymentCanceled(any());
+        verify(orderMapper).cancel(1);
+    }
+
     private Order order(Integer orderId, String status) {
         Order order = new Order();
         order.setOrderId(orderId);
@@ -183,6 +251,15 @@ class AdminOrderServiceTest {
         order.setOrderStatus(status);
         order.setCreatedAt(LocalDateTime.of(2026, 7, 29, 10, 0));
         return order;
+    }
+
+    private Payment payment(Long paymentId, String paymentMethod, String paymentKey) {
+        Payment payment = new Payment();
+        payment.setPaymentId(paymentId);
+        payment.setPaymentMethod(paymentMethod);
+        payment.setPaymentKey(paymentKey);
+        payment.setPaymentStatus("성공");
+        return payment;
     }
 
     private AdminOrderStatusRequestDto statusRequest(String status) {

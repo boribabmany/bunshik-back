@@ -14,6 +14,8 @@ import com.bunshik.admin.mappers.AdminOrderMapper;
 import com.bunshik.admin.security.CurrentAdminProvider;
 import com.bunshik.common.entity.AdminHistory;
 import com.bunshik.common.entity.Order;
+import com.bunshik.common.entity.Payment;
+import com.bunshik.kiosk.service.TossPaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +32,10 @@ public class AdminOrderService {
     private final AdminOrderMapper orderMapper;
     private final AdminHistoryMapper adminHistoryMapper;
     private final CurrentAdminProvider currentAdminProvider;
+    private final TossPaymentService tossPaymentService;
+
+    private static final List<String> TOSS_PAYMENT_METHODS =
+            List.of("토스페이", "카카오페이");
     /*
      * 일반 상태 변경 API에서 허용되는 상태 순서
      *
@@ -262,6 +268,27 @@ public class AdminOrderService {
          *
          * 완료, 취소 상태는 취소 불가능
          */
+
+        Payment payment = orderMapper.findSuccessfulPayment(orderId);
+
+        if (payment != null) {
+            String paymentKey = payment.getPaymentKey();
+            String paymentMethod = payment.getPaymentMethod();
+
+            if (paymentKey != null && !paymentKey.isBlank()) {
+                tossPaymentService.cancel(paymentKey, orderId);
+
+                if (orderMapper.markPaymentCanceled(payment.getPaymentId()) == 0) {
+                    throw new IllegalStateException(
+                            "결제 상태를 취소로 변경하지 못했습니다."
+                    );
+                }
+            } else if (TOSS_PAYMENT_METHODS.contains(paymentMethod)) {
+                throw new IllegalStateException(
+                        "기존 결제 건에는 paymentKey가 없어 자동 환불할 수 없습니다. Toss 관리자에서 직접 취소해주세요."
+                );
+            }
+        }
 
         int result = orderMapper.cancel(orderId);
 

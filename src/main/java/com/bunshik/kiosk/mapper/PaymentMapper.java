@@ -14,7 +14,8 @@ public interface PaymentMapper {
                        @Param("amount") Integer amount,
                        @Param("paymentMethod") String paymentMethod,
                        @Param("paymentStatus") String paymentStatus,
-                       @Param("failReason") String failReason);
+                       @Param("failReason") String failReason,
+                       @Param("paymentKey") String paymentKey);
 
     void updateOrderStatus(@Param("orderId") Integer orderId,
                            @Param("orderStatus") String orderStatus);

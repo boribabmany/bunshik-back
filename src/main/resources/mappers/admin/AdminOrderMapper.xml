@@ -180,4 +180,30 @@
         LIMIT 1
     </select>
 
+    <select id="findSuccessfulPayment"
+            parameterType="int"
+            resultType="com.bunshik.common.entity.Payment">
+        SELECT
+        payment_id AS paymentId,
+        order_id AS orderId,
+        amount,
+        payment_method AS paymentMethod,
+        payment_status AS paymentStatus,
+        fail_reason AS failReason,
+        payment_key AS paymentKey,
+        attempted_at AS attemptedAt
+        FROM payments
+        WHERE order_id = #{orderId}
+        AND payment_status = '성공'
+        ORDER BY payment_id DESC
+        LIMIT 1
+    </select>
+
+    <update id="markPaymentCanceled" parameterType="long">
+        UPDATE payments
+        SET payment_status = '취소'
+        WHERE payment_id = #{paymentId}
+        AND payment_status = '성공'
+    </update>
+
 </mapper>

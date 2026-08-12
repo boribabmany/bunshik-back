@@ -26,7 +26,7 @@ class PaymentServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("지원하지 않는 결제 수단입니다: 현금");
 
-        verify(paymentMapper, never()).insertPayment(any(), any(), any(), any(), any());
+        verify(paymentMapper, never()).insertPayment(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -50,7 +50,7 @@ class PaymentServiceTest {
         PaymentResponseDto response = paymentService.processPayment(paymentRequest(1, "카드"));
 
         assertThat(response.getStatus()).isEqualTo("성공");
-        verify(paymentMapper, never()).insertPayment(any(), any(), any(), any(), any());
+        verify(paymentMapper, never()).insertPayment(any(), any(), any(), any(), any(), any());
         verify(paymentMapper, never()).updateOrderStatus(any(), any());
     }
 
@@ -83,12 +83,12 @@ class PaymentServiceTest {
             if ("성공".equals(response.getStatus())) {
                 assertThat(response.getFailType()).isNull();
                 assertThat(response.getFailReason()).isNull();
-                verify(paymentMapper).insertPayment(eq(1), eq(10000), eq("카드"), eq("성공"), eq(null));
+                verify(paymentMapper).insertPayment(eq(1), eq(10000), eq("카드"), eq("성공"), eq(null), eq(null));
                 verify(paymentMapper).updateOrderStatus(1, "접수");
             } else {
                 assertThat(response.getFailType()).isNotNull();
                 assertThat(response.getFailReason()).isNotNull();
-                verify(paymentMapper).insertPayment(eq(1), eq(10000), eq("카드"), eq("실패"), eq(response.getFailReason()));
+                verify(paymentMapper).insertPayment(eq(1), eq(10000), eq("카드"), eq("실패"), eq(response.getFailReason()), eq(null));
                 verify(paymentMapper).updateOrderStatus(1, "결제대기");
             }
         }
@@ -107,7 +107,7 @@ class PaymentServiceTest {
             assertThat(response.getStatus()).isIn("성공", "실패");
 
             if ("성공".equals(response.getStatus())) {
-                verify(paymentMapper).insertPayment(eq(1), eq(8000), eq("네이버페이"), eq("성공"), eq(null));
+                verify(paymentMapper).insertPayment(eq(1), eq(8000), eq("네이버페이"), eq("성공"), eq(null), eq(null));
                 verify(paymentMapper).updateOrderStatus(1, "접수");
             } else {
                 assertThat(response.getFailType()).isNotNull();
@@ -128,7 +128,7 @@ class PaymentServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("지원하지 않는 결제 수단입니다: 카카오페이");
 
-        verify(paymentMapper, never()).insertPayment(any(), any(), any(), any(), any());
+        verify(paymentMapper, never()).insertPayment(any(), any(), any(), any(), any(), any());
     }
 
     private PaymentRequestDto paymentRequest(Integer orderId, String paymentMethod) {
