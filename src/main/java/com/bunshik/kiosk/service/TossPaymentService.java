@@ -37,7 +37,8 @@ public class TossPaymentService {
             throw new IllegalArgumentException("존재하지 않는 주문입니다: " + request.getOrderId());
         }
         if (paymentMapper.countSuccessfulPayments(order.getOrderId()) > 0) {
-            throw new IllegalArgumentException("이미 결제가 완료된 주문입니다.");
+            // 이미 성공 처리된 주문 — 재시도 요청이므로 에러가 아니라 기존 성공 결과를 그대로 응답
+            return PaymentResponseDto.builder().status("성공").build();
         }
         if (!"결제대기".equals(order.getOrderStatus())) {
             throw new IllegalStateException("결제 대기 중인 주문이 아닙니다: " + order.getOrderStatus());
@@ -80,3 +81,4 @@ public class TossPaymentService {
         // 결제대기 상태 유지 → 손님이 키오스크에서 재시도 가능
     }
 }
+

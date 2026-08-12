@@ -41,15 +41,17 @@ class PaymentServiceTest {
     }
 
     @Test
-    void processPaymentRejectsAlreadyPaidOrder() {
+    void processPaymentReturnsSuccessForAlreadyPaidOrder() {
         PaymentMapper paymentMapper = mock(PaymentMapper.class);
         PaymentService paymentService = new PaymentService(paymentMapper);
         when(paymentMapper.getOrderForPayment(1)).thenReturn(orderInfo(1, "결제대기", 10000));
         when(paymentMapper.countSuccessfulPayments(1)).thenReturn(1);
 
-        assertThatThrownBy(() -> paymentService.processPayment(paymentRequest(1, "카드")))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("이미 결제가 완료된 주문입니다.");
+        PaymentResponseDto response = paymentService.processPayment(paymentRequest(1, "카드"));
+
+        assertThat(response.getStatus()).isEqualTo("성공");
+        verify(paymentMapper, never()).insertPayment(any(), any(), any(), any(), any());
+        verify(paymentMapper, never()).updateOrderStatus(any(), any());
     }
 
     @Test

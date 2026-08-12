@@ -39,7 +39,8 @@ public class PaymentService {
         }
 
         if (paymentMapper.countSuccessfulPayments(order.getOrderId()) > 0) {
-            throw new IllegalArgumentException("이미 결제가 완료된 주문입니다.");
+            // 이미 성공 처리된 주문 — 재시도 요청이므로 에러가 아니라 기존 성공 결과를 그대로 응답
+            return PaymentResponseDto.builder().status("성공").build();
         }
 
         if (!"결제대기".equals(order.getOrderStatus())) {

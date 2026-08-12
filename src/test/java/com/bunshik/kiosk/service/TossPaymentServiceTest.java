@@ -1,5 +1,6 @@
 package com.bunshik.kiosk.service;
 
+import com.bunshik.kiosk.dto.PaymentResponseDto;
 import com.bunshik.kiosk.dto.TossConfirmRequestDto;
 import com.bunshik.kiosk.dto.TossFailRequestDto;
 import com.bunshik.kiosk.mapper.OrderPaymentInfo;
@@ -10,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,13 +43,16 @@ class TossPaymentServiceTest {
     }
 
     @Test
-    void confirmRejectsAlreadyPaidOrder() {
+    void confirmReturnsSuccessForAlreadyPaidOrder() {
         when(paymentMapper.getOrderForPayment(1)).thenReturn(orderInfo(1, "결제대기", 10000));
         when(paymentMapper.countSuccessfulPayments(1)).thenReturn(1);
 
-        assertThatThrownBy(() -> tossPaymentService.confirm(confirmRequest(1, 10000)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("이미 결제가 완료된 주문입니다.");
+        PaymentResponseDto response = tossPaymentService.confirm(confirmRequest(1, 10000));
+
+        assertThat(response.getStatus()).isEqualTo("성공");
+        // 이미 결제된 주문이므로 토스에 다시 승인 요청을 보내거나 결제를 중복 기록하면 안 됨
+        verify(paymentMapper, never()).insertPayment(any(), any(), any(), any(), any());
+        verify(paymentMapper, never()).updateOrderStatus(any(), any());
     }
 
     @Test
