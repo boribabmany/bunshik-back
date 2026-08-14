@@ -1,6 +1,8 @@
 package com.bunshik.admin.service;
 
 import com.bunshik.admin.dto.AdminOrderDetailResponseDto;
+import com.bunshik.admin.dto.AdminBulkOrderStatusRequestDto;
+import com.bunshik.admin.dto.AdminBulkOrderIdsRequestDto;
 import com.bunshik.admin.dto.AdminOrderItemRowDto;
 import com.bunshik.admin.dto.AdminOrderResponseDto;
 import com.bunshik.admin.dto.AdminOrderStatusRequestDto;
@@ -153,6 +155,50 @@ class AdminOrderServiceTest {
     }
 
     @Test
+    void updateBulkStatusChangesAllValidatedOrders() {
+        Order first = order(1, "접수");
+        Order second = order(2, "접수");
+        when(orderMapper.findById(1)).thenReturn(first);
+        when(orderMapper.findById(2)).thenReturn(second);
+        when(orderMapper.updateStatus(any(Order.class))).thenReturn(1);
+        when(currentAdminProvider.getAdminId()).thenReturn(7);
+
+        int result = adminOrderService.updateBulkStatus(
+                bulkStatusRequest(List.of(1, 2), "조리중")
+        );
+
+        assertThat(result).isEqualTo(2);
+        assertThat(first.getOrderStatus()).isEqualTo("조리중");
+        assertThat(second.getOrderStatus()).isEqualTo("조리중");
+    }
+
+    @Test
+    void updateBulkStatusValidatesEveryOrderBeforeUpdating() {
+        when(orderMapper.findById(1)).thenReturn(order(1, "접수"));
+        when(orderMapper.findById(2)).thenReturn(order(2, "완료"));
+
+        assertThatThrownBy(() -> adminOrderService.updateBulkStatus(
+                bulkStatusRequest(List.of(1, 2), "조리중")
+        ))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("허용되지 않는 상태 전이입니다: 완료 → 조리중");
+
+        verify(orderMapper, never()).updateStatus(any(Order.class));
+        verify(adminHistoryMapper, never()).insertHistory(any(AdminHistory.class));
+    }
+
+    @Test
+    void updateBulkStatusRejectsEmptySelection() {
+        assertThatThrownBy(() -> adminOrderService.updateBulkStatus(
+                bulkStatusRequest(List.of(), "조리중")
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("변경할 주문을 한 건 이상 선택해주세요.");
+
+        verifyNoInteractions(orderMapper);
+    }
+
+    @Test
     void cancelChangesActiveOrderAndSavesHistory() {
         when(orderMapper.findById(1)).thenReturn(order(1, "조리중"));
         when(orderMapper.cancel(1)).thenReturn(1);
@@ -167,6 +213,37 @@ class AdminOrderServiceTest {
         assertThat(historyCaptor.getValue().getTitle()).isEqualTo("주문 취소");
         assertThat(historyCaptor.getValue().getDescription())
                 .contains("조리중 상태에서 취소");
+    }
+
+    @Test
+    void cancelBulkCancelsAllValidatedOrders() {
+        when(orderMapper.findById(1)).thenReturn(order(1, "접수"));
+        when(orderMapper.findById(2)).thenReturn(order(2, "조리중"));
+        when(orderMapper.cancel(1)).thenReturn(1);
+        when(orderMapper.cancel(2)).thenReturn(1);
+        when(currentAdminProvider.getAdminId()).thenReturn(7);
+
+        assertThat(adminOrderService.cancelBulk(
+                bulkIdsRequest(List.of(1, 2))
+        )).isEqualTo(2);
+
+        verify(orderMapper).cancel(1);
+        verify(orderMapper).cancel(2);
+    }
+
+    @Test
+    void cancelBulkValidatesEveryOrderBeforeCanceling() {
+        when(orderMapper.findById(1)).thenReturn(order(1, "접수"));
+        when(orderMapper.findById(2)).thenReturn(order(2, "완료"));
+
+        assertThatThrownBy(() -> adminOrderService.cancelBulk(
+                bulkIdsRequest(List.of(1, 2))
+        ))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("완료된 주문은 취소할 수 없습니다.");
+
+        verify(orderMapper, never()).cancel(any());
+        verify(adminHistoryMapper, never()).insertHistory(any(AdminHistory.class));
     }
 
     @Test
@@ -253,6 +330,12 @@ class AdminOrderServiceTest {
         return order;
     }
 
+    private AdminBulkOrderIdsRequestDto bulkIdsRequest(List<Integer> orderIds) {
+        AdminBulkOrderIdsRequestDto request = new AdminBulkOrderIdsRequestDto();
+        request.setOrderIds(orderIds);
+        return request;
+    }
+
     private Payment payment(Long paymentId, String paymentMethod, String paymentKey) {
         Payment payment = new Payment();
         payment.setPaymentId(paymentId);
@@ -264,6 +347,17 @@ class AdminOrderServiceTest {
 
     private AdminOrderStatusRequestDto statusRequest(String status) {
         AdminOrderStatusRequestDto request = new AdminOrderStatusRequestDto();
+        request.setOrderStatus(status);
+        return request;
+    }
+
+    private AdminBulkOrderStatusRequestDto bulkStatusRequest(
+            List<Integer> orderIds,
+            String status
+    ) {
+        AdminBulkOrderStatusRequestDto request =
+                new AdminBulkOrderStatusRequestDto();
+        request.setOrderIds(orderIds);
         request.setOrderStatus(status);
         return request;
     }

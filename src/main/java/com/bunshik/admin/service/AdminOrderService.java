@@ -1,6 +1,8 @@
 package com.bunshik.admin.service;
 
 import com.bunshik.admin.dto.AdminOrderDetailResponseDto;
+import com.bunshik.admin.dto.AdminBulkOrderStatusRequestDto;
+import com.bunshik.admin.dto.AdminBulkOrderIdsRequestDto;
 import com.bunshik.admin.dto.AdminOrderItemResponseDto;
 import com.bunshik.admin.dto.AdminOrderItemRowDto;
 import com.bunshik.admin.dto.AdminOrderOptionResponseDto;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -233,12 +236,114 @@ public class AdminOrderService {
         return result;
     }
 
+    @Transactional
+    public int updateBulkStatus(AdminBulkOrderStatusRequestDto dto) {
+        if (dto == null || dto.getOrderIds() == null || dto.getOrderIds().isEmpty()) {
+            throw new IllegalArgumentException("변경할 주문을 한 건 이상 선택해주세요.");
+        }
+        if (dto.getOrderStatus() == null || dto.getOrderStatus().isBlank()) {
+            throw new IllegalArgumentException("변경할 주문 상태를 입력해주세요.");
+        }
+
+        String nextStatus = dto.getOrderStatus().trim();
+        if (!"조리중".equals(nextStatus) && !"완료".equals(nextStatus)) {
+            throw new IllegalArgumentException(
+                    "다중 주문 처리는 조리중 또는 완료 상태만 허용합니다."
+            );
+        }
+
+        LinkedHashSet<Integer> uniqueOrderIds = new LinkedHashSet<>();
+        for (Integer orderId : dto.getOrderIds()) {
+            if (orderId == null || orderId <= 0) {
+                throw new IllegalArgumentException("올바르지 않은 주문 ID가 포함되어 있습니다.");
+            }
+            uniqueOrderIds.add(orderId);
+        }
+
+        List<Order> targetOrders = uniqueOrderIds.stream()
+                .map(this::findById)
+                .toList();
+
+        for (Order order : targetOrders) {
+            String currentStatus = order.getOrderStatus();
+            validateCurrentStatus(currentStatus);
+            validateNextStatus(nextStatus);
+            validateTransition(currentStatus, nextStatus);
+        }
+
+        int updatedCount = 0;
+        for (Order order : targetOrders) {
+            String currentStatus = order.getOrderStatus();
+            order.setOrderStatus(nextStatus);
+
+            int result = orderMapper.updateStatus(order);
+            if (result == 0) {
+                throw new IllegalStateException(
+                        "주문 상태 변경에 실패했습니다. 주문 ID: " + order.getOrderId()
+                );
+            }
+
+            saveHistory(
+                    "주문 상태 일괄 변경",
+                    "주문번호 " + order.getOrderNumber() + " 상태가 "
+                            + currentStatus + " → " + nextStatus
+                            + "(으)로 변경되었습니다."
+            );
+            updatedCount += result;
+        }
+
+        return updatedCount;
+    }
+
     // 주문 취소
     @Transactional
     public int cancel(Integer orderId) {
-
-        // 주문 존재 여부 확인
         Order order = findById(orderId);
+        validateCancelableOrder(order);
+        return cancelValidatedOrder(order);
+    }
+
+    @Transactional
+    public int cancelBulk(AdminBulkOrderIdsRequestDto dto) {
+        if (dto == null || dto.getOrderIds() == null || dto.getOrderIds().isEmpty()) {
+            throw new IllegalArgumentException("취소할 주문을 한 건 이상 선택해주세요.");
+        }
+
+        LinkedHashSet<Integer> uniqueOrderIds = new LinkedHashSet<>();
+        for (Integer orderId : dto.getOrderIds()) {
+            if (orderId == null || orderId <= 0) {
+                throw new IllegalArgumentException("올바르지 않은 주문 ID가 포함되어 있습니다.");
+            }
+            uniqueOrderIds.add(orderId);
+        }
+
+        List<Order> targetOrders = uniqueOrderIds.stream()
+                .map(this::findById)
+                .toList();
+
+        for (Order order : targetOrders) {
+            validateCancelableOrder(order);
+
+            Payment payment = orderMapper.findSuccessfulPayment(order.getOrderId());
+            if (payment != null
+                    && (payment.getPaymentKey() == null || payment.getPaymentKey().isBlank())
+                    && TOSS_PAYMENT_METHODS.contains(payment.getPaymentMethod())) {
+                throw new IllegalStateException(
+                        "주문번호 " + order.getOrderNumber()
+                                + " 결제 건에는 paymentKey가 없어 자동 환불할 수 없습니다. "
+                                + "Toss 관리자에서 직접 취소해주세요."
+                );
+            }
+        }
+
+        int canceledCount = 0;
+        for (Order order : targetOrders) {
+            canceledCount += cancelValidatedOrder(order);
+        }
+        return canceledCount;
+    }
+
+    private void validateCancelableOrder(Order order) {
 
         String currentStatus = order.getOrderStatus();
 
@@ -258,6 +363,11 @@ public class AdminOrderService {
                     "완료된 주문은 취소할 수 없습니다."
             );
         }
+    }
+
+    private int cancelValidatedOrder(Order order) {
+        Integer orderId = order.getOrderId();
+        String currentStatus = order.getOrderStatus();
 
         /*
          * 현재 정책:

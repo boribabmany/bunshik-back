@@ -1,6 +1,8 @@
 package com.bunshik.admin.controller;
 
 import com.bunshik.admin.dto.AdminOrderSearchRequestDto;
+import com.bunshik.admin.dto.AdminBulkOrderStatusRequestDto;
+import com.bunshik.admin.dto.AdminBulkOrderIdsRequestDto;
 import com.bunshik.admin.dto.AdminOrderResponseDto;
 import com.bunshik.admin.dto.AdminOrderStatusRequestDto;
 import com.bunshik.admin.service.AdminOrderService;
@@ -58,6 +60,30 @@ public class AdminOrderController {
         return ApiResponse.success(
                 result,
                 "주문 상태가 변경되었습니다."
+        );
+    }
+
+    @PatchMapping("/bulk/status")
+    public ApiResponse<Integer> updateBulkStatus(
+            @RequestBody AdminBulkOrderStatusRequestDto dto
+    ) {
+        int result = adminOrderService.updateBulkStatus(dto);
+
+        return ApiResponse.success(
+                result,
+                "선택한 주문 상태가 변경되었습니다."
+        );
+    }
+
+    @PatchMapping("/bulk/cancel")
+    public ApiResponse<Integer> cancelBulk(
+            @RequestBody AdminBulkOrderIdsRequestDto dto
+    ) {
+        int result = adminOrderService.cancelBulk(dto);
+
+        return ApiResponse.success(
+                result,
+                "선택한 주문이 취소되었습니다."
         );
     }
 
