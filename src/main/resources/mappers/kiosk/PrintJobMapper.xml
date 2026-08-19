@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bunshik.kiosk.mapper.PrintJobMapper">
+
+    <insert id="insertPrintJob">
+        INSERT INTO print_jobs (order_id, type, status)
+        VALUES (#{orderId}, #{type}, 'PENDING')
+    </insert>
+
+    <!-- RTOS가 폴링할 대기 중인 출력 작업. 가장 오래된 것 하나만 전달 -->
+    <select id="findPendingPrintJob" resultType="com.bunshik.kiosk.mapper.PrintJobInfo">
+        SELECT
+        pj.print_job_id AS printJobId,
+        pj.order_id     AS orderId,
+        pj.type         AS type,
+        o.order_number  AS orderNumber,
+        o.total_price   AS totalPrice,
+        pj.status       AS status
+        FROM print_jobs pj
+        JOIN orders o ON pj.order_id = o.order_id
+        WHERE pj.status = 'PENDING'
+        ORDER BY pj.print_job_id ASC
+        LIMIT 1
+    </select>
+
+    <select id="findItemsByOrderId" resultType="com.bunshik.kiosk.mapper.PrintItemInfo">
+        SELECT
+        m.menu_name       AS menuName,
+        oi.quantity       AS quantity,
+        oi.price_at_order AS priceAtOrder
+        FROM order_items oi
+        JOIN menus m ON oi.menu_id = m.menu_id
+        WHERE oi.order_id = #{orderId}
+        ORDER BY oi.order_item_id ASC
+    </select>
+
+    <update id="completePrintJob">
+        UPDATE print_jobs
+        SET status = 'COMPLETED',
+        result = #{result},
+        completed_at = NOW()
+        WHERE print_job_id = #{printJobId}
+    </update>
+
+</mapper>
