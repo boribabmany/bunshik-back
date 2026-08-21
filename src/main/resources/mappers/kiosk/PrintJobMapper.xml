@@ -7,13 +7,21 @@
         VALUES (#{orderId}, #{type}, 'PENDING')
     </insert>
 
-    <!-- RTOS가 폴링할 대기 중인 출력 작업. 가장 오래된 것 하나만 전달 -->
     <select id="findPendingPrintJob" resultType="com.bunshik.kiosk.mapper.PrintJobInfo">
         SELECT
         pj.print_job_id AS printJobId,
         pj.order_id     AS orderId,
         pj.type         AS type,
         o.order_number  AS orderNumber,
+        o.order_type    AS orderType,
+        (
+        SELECT p.payment_method
+        FROM payments p
+        WHERE p.order_id = o.order_id
+        AND p.payment_status = '성공'
+        ORDER BY p.payment_id DESC
+        LIMIT 1
+        ) AS paymentMethod,
         o.total_price   AS totalPrice,
         pj.status       AS status
         FROM print_jobs pj

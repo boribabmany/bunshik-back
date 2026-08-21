@@ -51,6 +51,8 @@ public class PrintJobService {
                 .id(job.getPrintJobId())
                 .type(job.getType())
                 .orderNumber(job.getOrderNumber())
+                .orderType(job.getOrderType())
+                .paymentMethod(job.getPaymentMethod())
                 .items(itemDtos)
                 .totalPrice(job.getTotalPrice())
                 .status(job.getStatus())

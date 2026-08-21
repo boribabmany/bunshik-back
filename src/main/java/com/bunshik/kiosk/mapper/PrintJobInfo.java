@@ -11,6 +11,8 @@ public class PrintJobInfo {
     private Integer orderId;
     private String type;
     private String orderNumber;
+    private String orderType;
+    private String paymentMethod;
     private Integer totalPrice;
     private String status;
 }
