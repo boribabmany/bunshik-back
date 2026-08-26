@@ -25,7 +25,7 @@
         LIMIT 1
         ) AS paymentMethod
         FROM orders o
-        WHERE o.order_status NOT IN ('결제대기', '취소')
+        WHERE o.order_status != '결제대기'
         ORDER BY o.order_id DESC
 
     </select>
