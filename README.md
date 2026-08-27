@@ -224,7 +224,8 @@ mybatis.configuration.map-underscore-to-camel-case=true
 - 결제 성공(`POST /api/payments`) 시 → `접수`로 전환됩니다.
 - **결제 실패 시 → `취소`가 아닌 `결제대기`를 유지**합니다. 카드 거절, 응답 지연 등은 일시적 실패이므로, 손님이 재시도(다른 카드, 다시 결제)할 수 있도록 주문을 살려둡니다.
 - 손님이 결제를 포기하고 뒤로가기를 누르면 → `PATCH /api/orders/{orderId}/cancel`을 호출합니다. 단, **`결제대기` 상태인 주문만 취소 가능**하며, 이미 `접수`/`조리중`/`완료`로 넘어간 주문은 `IllegalStateException`으로 차단됩니다.
-- **중복 결제 차단**: 동일 `order_id`에 대해 이미 `payment_status='성공'` 기록이 존재하면, 재결제 요청은 `IllegalArgumentException`("이미 결제가 완료된 주문입니다.")으로 거부됩니다. (`PaymentService.processPayment`)
+- **중복 결제 차단**: 동일 `order_id`에 대해 이미 `payment_status='성공'` 기록이 존재하면, 재결제 요청은 에러 없이 기존 성공 결과를 그대로 반환합니다(`PaymentService.processPayment`). 클라이언트가 같은 결제를 중복으로 보내도 안전하게 처리됩니다.
+- **동시 결제 요청 시 데드락 방지 (2026-08-27)**: 같은 주문에 결제 요청 2건이 거의 동시에 들어오면 두 트랜잭션이 `orders` 행을 동시에 갱신하려다 MySQL 데드락(`Deadlock found when trying to get lock`)이 발생해 한쪽 요청이 500 에러를 받는 문제를 실제 동시 요청 테스트로 재현·확인했습니다. `PaymentMapper.getOrderForPayment` 조회에 `FOR UPDATE`를 추가해 같은 주문에 대한 요청이 순차적으로 처리되도록 수정했습니다. `TossPaymentService.confirm()`도 동일한 조회를 사용하므로 함께 적용됩니다.
 
 | 상태 전이           | 트리거                           | 처리 위치                       |
 | ------------------- | -------------------------------- | ------------------------------- |
