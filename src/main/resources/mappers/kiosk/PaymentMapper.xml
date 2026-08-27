@@ -10,6 +10,7 @@
         order_status AS orderStatus
         FROM orders
         WHERE order_id = #{orderId}
+        FOR UPDATE
     </select>
 
     <select id="countSuccessfulPayments" resultType="int">
